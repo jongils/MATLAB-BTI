@@ -38,11 +38,13 @@ classdef MBTIApp < matlab.apps.AppBase
             app.UIFigure.Name = 'Engineering MBTI';
             app.UIFigure.Position = [100 100 900 600];
 
-            app.MainLayout = uigridlayout(app.UIFigure,[1 1]);
+            app.MainLayout = uigridlayout(app.UIFigure,[1 3]);
+            app.MainLayout.ColumnWidth = {'1x','4x','1x'};
             app.MainLayout.Scrollable = 'on';
 
             % Start Panel
             app.StartPanel = uipanel(app.MainLayout,'Title','', 'BackgroundColor',app.bgColor);
+            app.StartPanel.Layout.Column = 2;
             app.StartPanel.Scrollable = 'on';
             grid = uigridlayout(app.StartPanel,[4 1]);
             grid.RowHeight = {'fit','fit','1x','fit'};
@@ -72,11 +74,13 @@ classdef MBTIApp < matlab.apps.AppBase
 
             % Question Panel
             app.QuestionPanel = uipanel(app.MainLayout,'Visible','off','BackgroundColor',app.bgColor);
+            app.QuestionPanel.Layout.Column = 2;
             app.QuestionPanel.Scrollable = 'on';
             % will populate later dynamically
 
             % Result Panel
             app.ResultPanel = uipanel(app.MainLayout,'Visible','off','BackgroundColor',app.bgColor);
+            app.ResultPanel.Layout.Column = 2;
             app.ResultPanel.Scrollable = 'on';
             % dynamic later
 
@@ -114,19 +118,24 @@ classdef MBTIApp < matlab.apps.AppBase
                 warning('Error in showQuestion: %s', ex.message);
                 rethrow(ex);
             end
-            grid = uigridlayout(app.QuestionPanel,[5 1]);
-            grid.RowHeight = {'fit','fit','1x','fit','fit'};
-            % progress label
-            lblProg = uilabel(grid,'Text',sprintf('Q %d/%d',app.questionIndex,numel(app.questions)),...
+            grid = uigridlayout(app.QuestionPanel,[6 1]);
+            grid.RowHeight = {'fit','fit','fit','1x','fit','fit'};
+            % progress label with percentage
+            pct = app.questionIndex / numel(app.questions) * 100;
+            lblProg = uilabel(grid,'Text',sprintf('Q %d/%d  (%d%%)',app.questionIndex,numel(app.questions),round(pct)),...
                 'HorizontalAlignment','center','FontSize',24,'FontColor','white');
             lblProg.Layout.Row = 1;
+            % progress bar (0.0–1.0 maps to 0–100%)
+            prog = uiprogressbar(grid);
+            prog.Layout.Row = 2;
+            prog.Value = app.questionIndex / numel(app.questions);
             % question text
             qtext = q.(app.lang);
             lblQ = uilabel(grid,'Text',qtext,'HorizontalAlignment','center','FontColor','white');
-            lblQ.Layout.Row = 2;
+            lblQ.Layout.Row = 3;
             % image placeholder
             ax = uiaxes(grid);
-            ax.Layout.Row = 3;
+            ax.Layout.Row = 4;
             % set background using RGB since UIAxes may not accept hex
             try
                 ax.BackgroundColor = app.hex2rgb(app.bgColor);
@@ -136,7 +145,7 @@ classdef MBTIApp < matlab.apps.AppBase
             title(ax,qtext,'Color','white');
             % choices
             hbox = uigridlayout(grid,[1 2]);
-            hbox.Layout.Row = 4;
+            hbox.Layout.Row = 5;
             btnA = uibutton(hbox,'push','Text',q.A{app.langIdx()},'FontColor',app.txtColorA,...
                 'ButtonPushedFcn',@(s,e)app.safeInvoke(@()app.recordAnswer('A')));
             btnB = uibutton(hbox,'push','Text',q.B{app.langIdx()},'FontColor',app.txtColorB,...
@@ -150,7 +159,7 @@ classdef MBTIApp < matlab.apps.AppBase
             btnExit = uibutton(grid,'push','Text',txtExit,...
                 'BackgroundColor',app.btnColorExit,'FontColor','white',...
                 'ButtonPushedFcn',@(s,e)app.safeInvoke(@()delete(app.UIFigure)));
-            btnExit.Layout.Row = 5;
+            btnExit.Layout.Row = 6;
         end
 
         function recordAnswer(app,choice)
@@ -185,6 +194,7 @@ classdef MBTIApp < matlab.apps.AppBase
             % build result UI
             grid = uigridlayout(app.ResultPanel,[6 1]);
             grid.RowHeight = {'fit','fit','fit','fit','fit','fit'};
+            grid.Padding = [24 24 24 40];
             lblTitle = uilabel(grid,'Text',['Type ',num2str(type),' (',name,')'],'FontSize',24,...
                 'HorizontalAlignment','center','FontColor','white');
             lblTitle.Layout.Row=1;
