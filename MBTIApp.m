@@ -87,7 +87,7 @@ classdef MBTIApp < matlab.apps.AppBase
             try
                 app.lang = lang;
                 app.questionIndex = 0;
-                app.answers = [];
+                app.answers = '';
                 app.StartPanel.Visible = 'off';
                 % ensure question panel is shown
                 app.QuestionPanel.Visible = 'on';
@@ -137,9 +137,9 @@ classdef MBTIApp < matlab.apps.AppBase
             % choices
             hbox = uigridlayout(grid,[1 2]);
             hbox.Layout.Row = 4;
-            btnA = uibutton(hbox,'push','Text',q.A{1},'FontColor',app.txtColorA,...
+            btnA = uibutton(hbox,'push','Text',q.A{app.langIdx()},'FontColor',app.txtColorA,...
                 'ButtonPushedFcn',@(s,e)app.safeInvoke(@()app.recordAnswer('A')));
-            btnB = uibutton(hbox,'push','Text',q.B{1},'FontColor',app.txtColorB,...
+            btnB = uibutton(hbox,'push','Text',q.B{app.langIdx()},'FontColor',app.txtColorB,...
                 'ButtonPushedFcn',@(s,e)app.safeInvoke(@()app.recordAnswer('B')));
             % exit button
             if strcmp(app.lang,'ko')
@@ -170,14 +170,12 @@ classdef MBTIApp < matlab.apps.AppBase
             countA = sum(app.answers=='A');
             countB = sum(app.answers=='B');
             if countA>=countB
-                group='MATLAB';
                 if app.answers(3)=='A'
                     type=1; name='INTJ'; desc='데이터 연금술사'; base='MATLAB'; tool='Deep Learning Toolbox';
                 else
                     type=3; name='INTP'; desc='주파수 마에스트로'; base='MATLAB'; tool='Signal Processing Toolbox';
                 end
             else
-                group='Simulink';
                 if app.answers(2)=='B'
                     type=2; name='ISTP'; desc='메카 워리어'; base='Simulink'; tool='Simscape Multibody';
                 else
@@ -200,15 +198,17 @@ classdef MBTIApp < matlab.apps.AppBase
             lblTeam.Layout.Row=5;
             hbox = uigridlayout(grid,[1 3]);
             hbox.Layout.Row=6;
-            btnLink = uibutton(hbox,'push','Text','관련 제품 보러가기',... 
-                'ButtonPushedFcn',@(s,e)app.safeInvoke(@()app.openLink()));
             if strcmp(app.lang,'ko')
+                linkTxt = '관련 제품 보러가기';
                 retryTxt = '다시 하기';
                 closeTxt = '종료';
             else
+                linkTxt = 'Related Products';
                 retryTxt = 'Retry';
                 closeTxt = 'Exit';
             end
+            btnLink = uibutton(hbox,'push','Text',linkTxt,...
+                'ButtonPushedFcn',@(s,e)app.safeInvoke(@()app.openLink()));
             btnRetry = uibutton(hbox,'push','Text',retryTxt,...
                 'ButtonPushedFcn',@(s,e)app.safeInvoke(@()app.start(app.lang)));
             btnClose = uibutton(hbox,'push','Text',closeTxt,...
@@ -251,10 +251,15 @@ classdef MBTIApp < matlab.apps.AppBase
             end
             rgb = sscanf(hex,'%2x%2x%2x')'/255;
         end
+
+        function idx = langIdx(app)
+            % return 1 for Korean, 2 for English — used to index bilingual cell arrays
+            idx = 1 + ~strcmp(app.lang,'ko');
+        end
     end
     methods (Access = public)
         function app = MBTIApp
-            buildUI(app);
+            app.buildUI();
         end
 
         % debug helper
