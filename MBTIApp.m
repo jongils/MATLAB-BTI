@@ -163,16 +163,28 @@ classdef MBTIApp < matlab.apps.AppBase
             btnB = uibutton(hbox,'push','Text',q.B{app.langIdx()},'BackgroundColor',app.txtColorB,'FontColor',app.txtColor,...
                 'FontSize',18,'FontWeight','bold',...
                 'ButtonPushedFcn',@(s,e)app.safeInvoke(@()app.recordAnswer('B')));
-            % exit button
+            
+            % Bottom buttons: Back | Skip | Exit
+            hboxBottom = uigridlayout(grid,[1 3]);
+            hboxBottom.Layout.Row = 5;
+            hboxBottom.ColumnSpacing = 10;
+            
             if strcmp(app.lang,'ko')
-                txtExit = '종료';
+                txtBack = '이전'; txtSkip = '건너뛰기'; txtExit = '종료';
             else
-                txtExit = 'Exit';
+                txtBack = 'Back'; txtSkip = 'Skip'; txtExit = 'Exit';
             end
-            btnExit = uibutton(grid,'push','Text',txtExit,...
+            
+            btnBack = uibutton(hboxBottom,'push','Text',txtBack,'BackgroundColor','#495057','FontColor','white',...
+                'ButtonPushedFcn',@(s,e)app.safeInvoke(@()app.previousQuestion()));
+            if app.questionIndex == 1, btnBack.Enable = 'off'; end
+            
+            btnSkip = uibutton(hboxBottom,'push','Text',txtSkip,'BackgroundColor','#17A2B8','FontColor','white',...
+                'ButtonPushedFcn',@(s,e)app.safeInvoke(@()app.skipQuestion()));
+            
+            btnExit = uibutton(hboxBottom,'push','Text',txtExit,...
                 'BackgroundColor',app.btnColorExit,'FontColor','white',...
                 'ButtonPushedFcn',@(s,e)app.safeInvoke(@()delete(app.UIFigure)));
-            btnExit.Layout.Row = 5;
         end
 
         function recordAnswer(app,choice)
@@ -182,6 +194,20 @@ classdef MBTIApp < matlab.apps.AppBase
                 warning('Failed to record answer: %s', ex.message);
             end
             app.showQuestion();
+        end
+
+        function previousQuestion(app)
+            if app.questionIndex > 1
+                % Remove last answer
+                app.answers(end) = [];
+                % Decrement index by 2 because showQuestion increments by 1
+                app.questionIndex = app.questionIndex - 2;
+                app.showQuestion();
+            end
+        end
+
+        function skipQuestion(app)
+            app.recordAnswer('X');
         end
 
         function showResult(app)
@@ -196,10 +222,23 @@ classdef MBTIApp < matlab.apps.AppBase
 
             % Calculate 4 Axes
             nAns = numel(app.answers);
-            idx = [1,5,9]; idx = idx(idx<=nAns); cntM = sum(app.answers(idx) == 'A');  letterT_F = 'F'; if ~isempty(idx) && cntM >= numel(idx)/2, letterT_F = 'T'; end
-            idx = [2,6,10]; idx = idx(idx<=nAns); cntD = sum(app.answers(idx) == 'A'); letterJ_P = 'J'; if ~isempty(idx) && cntD >= numel(idx)/2, letterJ_P = 'P'; end
-            idx = [3,7,11]; idx = idx(idx<=nAns); cntA = sum(app.answers(idx) == 'A'); letterE_I = 'I'; if ~isempty(idx) && cntA >= numel(idx)/2, letterE_I = 'E'; end
-            idx = [4,8,12]; idx = idx(idx<=nAns); cntN = sum(app.answers(idx) == 'A'); letterN_S = 'S'; if ~isempty(idx) && cntN >= numel(idx)/2, letterN_S = 'N'; end
+            
+            % Helper to calculate type ignoring 'X' (Skip)
+            function res = calcType(indices)
+                validIdx = indices(indices <= nAns);
+                validAns = app.answers(validIdx);
+                validAns = validAns(validAns ~= 'X'); % Filter skips
+                cntA = sum(validAns == 'A');
+                res = false; % Default to 'B' side
+                if ~isempty(validAns) && cntA >= numel(validAns)/2
+                    res = true; % 'A' side
+                end
+            end
+
+            letterT_F = 'F'; if calcType([1,5,9]), letterT_F = 'T'; end
+            letterJ_P = 'J'; if calcType([2,6,10]), letterJ_P = 'P'; end
+            letterE_I = 'I'; if calcType([3,7,11]), letterE_I = 'E'; end
+            letterN_S = 'S'; if calcType([4,8,12]), letterN_S = 'N'; end
             
             % MBTI 조합 생성 (E/I, N/S, T/F, J/P 순서)
             mbtiStr = [letterE_I, letterN_S, letterT_F, letterJ_P];
