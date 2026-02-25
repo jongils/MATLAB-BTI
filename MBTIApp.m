@@ -211,14 +211,37 @@ classdef MBTIApp < matlab.apps.AppBase
         end
 
         function showResult(app)
+            if numel(app.answers) < numel(app.questions)
+                return;
+            end
+
+            % Check if there are enough valid answers (at least one per dimension)
+            % Dimensions: T/F [1,5,9], J/P [2,6,10], E/I [3,7,11], N/S [4,8,12]
+            dimIndices = {[1,5,9], [2,6,10], [3,7,11], [4,8,12]};
+            insufficient = false;
+            for i = 1:numel(dimIndices)
+                if all(app.answers(dimIndices{i}) == 'X')
+                    insufficient = true;
+                    break;
+                end
+            end
+            
+            if insufficient
+                msg = '결과 계산에 필요한 답변이 부족합니다. 처음부터 다시 시작합니다.';
+                title = '결과 보류';
+                if strcmp(app.lang,'en')
+                    msg = 'Insufficient answers to calculate result. Restarting...';
+                    title = 'Result Withheld';
+                end
+                uialert(app.UIFigure, msg, title, 'Icon','warning', ...
+                    'CloseFcn',@(s,e)app.safeInvoke(@()app.start(app.lang)));
+                return;
+            end
+
             delete(app.QuestionPanel.Children);
             app.QuestionPanel.Visible = 'off';
             delete(app.ResultPanel.Children);
             app.ResultPanel.Visible = 'on';
-            
-            if numel(app.answers) < numel(app.questions)
-                return;
-            end
 
             % Calculate 4 Axes
             nAns = numel(app.answers);
