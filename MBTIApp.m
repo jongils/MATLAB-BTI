@@ -1,5 +1,6 @@
 classdef MBTIApp < matlab.apps.AppBase
     % MBTIApp - Engineering MBTI quiz programmatic App Designer app
+    % New Commit - 20260303
 
     properties (Access = public)
         UIFigure matlab.ui.Figure
@@ -14,13 +15,20 @@ classdef MBTIApp < matlab.apps.AppBase
         lang % 'ko' or 'en'
         questionIndex = 0;
         answers = ''; % store choices as char array
+        theme = 'light'; % 'light' or 'dark'
+    end
+
+    properties (Dependent, Access = private)
+        bgColor
+        txtColor
     end
 
     properties (Constant, Access = private)
-        bgColor = '#F8F9FA';       % Light Gray (Light Mode)
+        lightColors = struct('bg', '#F8F9FA', 'txt', '#212529'); % Light Mode
+        darkColors = struct('bg', '#212529', 'txt', '#F8F9FA');  % Dark Mode
+
         btnColorKo = '#007BFF';    % Standard Blue
         btnColorEn = '#E83E8C';    % Standard Pink
-        txtColor   = '#212529';    % Dark Gray (Text)
         txtColorA  = '#218838';    % Darker Green
         txtColorB  = '#FFC107';    % Standard Amber
         btnColorExit = '#6C757D';  % Standard Gray
@@ -41,10 +49,15 @@ classdef MBTIApp < matlab.apps.AppBase
     end
 
     methods (Access = public)
+        function delete(app)
+            delete(app.UIFigure);
+        end
+
         function buildUI(app)
             app.UIFigure = uifigure('Visible','off','Color',app.bgColor);
             app.UIFigure.Name = 'Engineering MBTI';
-            app.UIFigure.Position = [100 100 900 500];
+            app.UIFigure.CloseRequestFcn = @(src, event)delete(app);
+            app.UIFigure.Position = [100 100 450*1.2 800*1.2];
 
             app.MainLayout = uigridlayout(app.UIFigure,[1 1]);
             app.MainLayout.Scrollable = 'on';
@@ -56,16 +69,16 @@ classdef MBTIApp < matlab.apps.AppBase
             app.StartPanel.Scrollable = 'on';
             grid = uigridlayout(app.StartPanel,[5 1]);
             grid.RowHeight = {'1x','fit','fit','1x','fit'};
-            grid.Padding = [40 40 40 40];
+            grid.Padding = [20 20 20 20];
             grid.RowSpacing = 24;
             
             lbl = uilabel(grid,'Text','Engineering MBTI','HorizontalAlignment','center',...
-                'FontSize',48,'FontWeight','bold','FontColor',app.txtColor);
+                'FontSize',32,'FontWeight','bold','FontColor',app.txtColor, 'Tag', 'ThemeableLabel');
             lbl.Layout.Row = 2;
             
             % language buttons
             hbox = uigridlayout(grid,[1 2]);
-            hbox.RowHeight = {80};  % 버튼 높이 확보
+            hbox.RowHeight = {96};  % 버튼 높이 확보
             hbox.ColumnWidth = {'1x','1x'};
             hbox.ColumnSpacing = 24;
             hbox.Layout.Row = 3;
@@ -79,10 +92,18 @@ classdef MBTIApp < matlab.apps.AppBase
             % filler
             spacer = uilabel(grid,'Text','');
             spacer.Layout.Row = 4;
-            footer = uilabel(grid,'Text','Design by MATLAB App Designer','HorizontalAlignment','center',...
-                'FontColor',app.txtColor,'FontSize',14);
-            footer.Layout.Row = 5;
-
+            
+            % Footer with theme toggle
+            footerGrid = uigridlayout(grid, [1,2]);
+            footerGrid.Layout.Row = 5;
+            footerGrid.ColumnWidth = {'1x', 'fit'};
+            footer = uilabel(footerGrid,'Text','Design by MATLAB App Designer','HorizontalAlignment','center',...
+                'FontColor',app.txtColor,'FontSize',14, 'Tag', 'ThemeableLabel');
+            footer.Layout.Column = 1;
+            themeBtn = uibutton(footerGrid, 'Text', '🌙', 'FontSize', 20, ...
+                'ButtonPushedFcn', @app.toggleTheme);
+            themeBtn.Layout.Column = 2;
+            
             % Question Panel
             app.QuestionPanel = uipanel(app.MainLayout,'Visible','off','BackgroundColor',app.bgColor, 'TitlePosition', 'centertop');
             app.QuestionPanel.Layout.Row = 1;     % <--- 이 줄 추가
@@ -102,6 +123,11 @@ classdef MBTIApp < matlab.apps.AppBase
 
         function start(app,lang)
             try
+                % UIFigure가 유효한지 확인 (Null Pointer/삭제된 객체 접근 방지)
+                if isempty(app.UIFigure) || ~isvalid(app.UIFigure)
+                    app.buildUI();
+                end
+
                 app.lang = lang;
                 app.questionIndex = 0;
                 app.answers = '';
@@ -132,37 +158,39 @@ classdef MBTIApp < matlab.apps.AppBase
                 rethrow(ex);
             end
             grid = uigridlayout(app.QuestionPanel,[5 1]);
-            grid.RowHeight = {'fit','fit','1x',100,'fit'}; % 선택지 버튼 영역 확대
-            grid.Padding = [40 40 40 40];
+            grid.RowHeight = {'fit','fit','1x',120,'fit'}; % 선택지 버튼 영역 확대
+            grid.Padding = [20 20 20 20];
             grid.RowSpacing = 20;
             % progress label
             lblProg = uilabel(grid,'Text',sprintf('Question %d / %d',app.questionIndex,numel(app.questions)),...
-                'HorizontalAlignment','center','FontSize',20,'FontColor',app.txtColor);
+                'HorizontalAlignment','center','FontSize',20,'FontColor',app.txtColor, 'Tag', 'ThemeableLabel');
             lblProg.Layout.Row = 1;
             % question text
             qtext = q.(app.lang);
-            lblQ = uilabel(grid,'Text',qtext,'HorizontalAlignment','center','FontColor',app.txtColor,'FontSize',24,'FontWeight','bold');
+            lblQ = uilabel(grid,'Text',qtext,'HorizontalAlignment','center','FontColor',app.txtColor,'FontSize',24,'FontWeight','bold', 'Tag', 'ThemeableLabel');
             lblQ.Layout.Row = 2;
-            % image placeholder
-            ax = uiaxes(grid);
-            ax.Layout.Row = 3;
-            % set background using RGB since UIAxes may not accept hex
-            try
-                ax.BackgroundColor = app.hex2rgb(app.bgColor);
-            catch
-                ax.BackgroundColor = 'gray';
+            
+            % Image Area (Questions related image)
+            img = uiimage(grid);
+            img.Layout.Row = 3;
+            img.HorizontalAlignment = 'center';
+            imgFile = sprintf('Q%d.png', app.questionIndex);
+            if exist(imgFile, 'file')
+                img.ImageSource = imgFile;
+            else
+                img.AltText = ''; % 이미지가 없으면 빈 공간으로 둠
             end
-            title(ax,qtext,'Color',app.txtColor);
+            
             % choices
             hbox = uigridlayout(grid,[1 2]);
             hbox.Layout.Row = 4;
             hbox.ColumnSpacing = 20;
             btnA = uibutton(hbox,'push','Text',q.A{app.langIdx()},'BackgroundColor',app.txtColorA,'FontColor','white',...
-                'FontSize',18,'FontWeight','bold',...
+                'FontSize',14,'FontWeight','bold',...
                 'ButtonPushedFcn',@(s,e)app.safeInvoke(@()app.recordAnswer('A')));
             btnB = uibutton(hbox,'push','Text',q.B{app.langIdx()},'BackgroundColor',app.txtColorB,'FontColor',app.txtColor,...
-                'FontSize',18,'FontWeight','bold',...
-                'ButtonPushedFcn',@(s,e)app.safeInvoke(@()app.recordAnswer('B')));
+                'FontSize',14,'FontWeight','bold',...
+                'ButtonPushedFcn',@(s,e)app.safeInvoke(@()app.recordAnswer('B')), 'Tag', 'ThemeableButtonFont');
             
             % Bottom buttons: Back | Skip | Exit
             hboxBottom = uigridlayout(grid,[1 3]);
@@ -184,7 +212,7 @@ classdef MBTIApp < matlab.apps.AppBase
             
             btnExit = uibutton(hboxBottom,'push','Text',txtExit,...
                 'BackgroundColor',app.btnColorExit,'FontColor','white',...
-                'ButtonPushedFcn',@(s,e)app.safeInvoke(@()delete(app.UIFigure)));
+                'ButtonPushedFcn',@(s,e)app.safeInvoke(@()delete(app)));
         end
 
         function recordAnswer(app,choice)
@@ -268,58 +296,71 @@ classdef MBTIApp < matlab.apps.AppBase
             
             % Map to 16 Types
             switch mbtiStr
-                case 'ENTP', name='머신러닝/딥러닝 어플리케이션 개발'; base='MATLAB'; tool='Deep Learning Toolbox';
-                case 'ESTP', name='시스템 엔지니어링 (아키텍처 설계)'; base='MATLAB'; tool='System Composer';
-                case 'INTP', name='데이터 분석'; base='MATLAB'; tool='Statistics & Machine Learning Toolbox';
-                case 'ISTP', name='순수한 매트랩 프로그래머'; base='MATLAB'; tool='MATLAB Coder';
-                case 'ENTJ', name='자율 주행/ADAS 어플리케이션 개발'; base='MATLAB'; tool='Automated Driving Toolbox';
-                case 'ESTJ', name='소프트웨어 엔지니어링 (검증 작업)'; base='MATLAB/Simulink'; tool='Simulink Test & Check';
-                case 'INTJ', name='주파수 등 신호처리 및 분석'; base='MATLAB'; tool='Signal Processing Toolbox';
-                case 'ISTJ', name='제어 알고리즘 개발자 (매트랩 프로그래밍)'; base='MATLAB'; tool='Control System Toolbox';
-                case 'ENFP', name='ROS, DDS, Adaptive AUTOSAR 플랫폼 적용'; base='Simulink'; tool='ROS Toolbox / AUTOSAR Blockset';
-                case 'ESFP', name='ASPICE, 기능 안전 고려한 소프트웨어 개발'; base='Simulink'; tool='Requirements Toolbox';
-                case 'INFP', name='자동 코드 생성'; base='Simulink'; tool='Embedded Coder';
-                case 'ISFP', name='매트랩/시뮬링크 초보자'; base='Simulink'; tool='Simulink Onramp';
-                case 'ENFJ', name='로봇 등 메카닉 구현'; base='Simulink'; tool='Robotics System Toolbox';
-                case 'ESFJ', name='플랜트 모델링 및 시뮬레이션'; base='Simulink'; tool='Simscape';
-                case 'INFJ', name='제어 알고리즘 개발자 (시뮬링크 모델 이용)'; base='Simulink'; tool='Simulink Control Design';
-                case 'ISFJ', name='모터 제어 등 전동화'; base='Simulink'; tool='Motor Control Blockset';
-                otherwise,   name='Unknown'; base='N/A'; tool='N/A';
+                case 'ENTP', name='머신러닝/딥러닝 어플리케이션 개발'; base='MATLAB'; tool='Deep Learning Toolbox'; best='INFJ'; worst='ISFJ';
+                case 'ESTP', name='시스템 엔지니어링 (아키텍처 설계)'; base='MATLAB'; tool='System Composer'; best='ISFJ'; worst='INFP';
+                case 'INTP', name='데이터 분석'; base='MATLAB'; tool='Statistics & Machine Learning Toolbox'; best='ENTJ'; worst='ESFJ';
+                case 'ISTP', name='순수한 매트랩 프로그래머'; base='MATLAB'; tool='MATLAB Coder'; best='ESFJ'; worst='ENFP';
+                case 'ENTJ', name='자율 주행/ADAS 어플리케이션 개발'; base='MATLAB'; tool='Automated Driving Toolbox'; best='INTP'; worst='ISFP';
+                case 'ESTJ', name='소프트웨어 엔지니어링 (검증 작업)'; base='MATLAB/Simulink'; tool='Simulink Test & Check'; best='ISTP'; worst='INFP';
+                case 'INTJ', name='주파수 등 신호처리 및 분석'; base='MATLAB'; tool='Signal Processing Toolbox'; best='ENFP'; worst='ESFP';
+                case 'ISTJ', name='제어 알고리즘 개발자 (매트랩 프로그래밍)'; base='MATLAB'; tool='Control System Toolbox'; best='ESFP'; worst='ENFJ';
+                case 'ENFP', name='ROS, DDS, Adaptive AUTOSAR 플랫폼 적용'; base='Simulink'; tool='ROS Toolbox / AUTOSAR Blockset'; best='INTJ'; worst='ISTJ';
+                case 'ESFP', name='ASPICE, 기능 안전 고려한 소프트웨어 개발'; base='Simulink'; tool='Requirements Toolbox'; best='ISTJ'; worst='INTJ';
+                case 'INFP', name='자동 코드 생성'; base='Simulink'; tool='Embedded Coder'; best='ENFJ'; worst='ESTJ';
+                case 'ISFP', name='매트랩/시뮬링크 초보자'; base='Simulink'; tool='Simulink Onramp'; best='ESFJ'; worst='ENTJ';
+                case 'ENFJ', name='로봇 등 메카닉 구현'; base='Simulink'; tool='Robotics System Toolbox'; best='INFP'; worst='ISTJ';
+                case 'ESFJ', name='플랜트 모델링 및 시뮬레이션'; base='Simulink'; tool='Simscape'; best='ISFP'; worst='INTP';
+                case 'INFJ', name='제어 알고리즘 개발자 (시뮬링크 모델 이용)'; base='Simulink'; tool='Simulink Control Design'; best='ENTP'; worst='ESTP';
+                case 'ISFJ', name='모터 제어 등 전동화'; base='Simulink'; tool='Motor Control Blockset'; best='ESTP'; worst='ENTP';
+                otherwise,   name='Unknown'; base='N/A'; tool='N/A'; best='-'; worst='-';
             end
 
             % Build result UI
-            grid = uigridlayout(app.ResultPanel,[7 1]);
-            grid.RowHeight = {'fit','fit','fit','fit','fit','fit','1x'};
-            grid.Padding = [40 100 40 40];
+            grid = uigridlayout(app.ResultPanel,[8 1]);
+            grid.RowHeight = {'fit',200,'fit','fit','fit','fit','fit','1x'}; % 2번째 행에 이미지 높이(200px) 할당
+            grid.Padding = [20 50 20 20];
             grid.RowSpacing = 24;
             
             % MBTI 텍스트 출력
             lblTitle = uilabel(grid,'Text',['당신의 엔지니어링 MBTI는: ', mbtiStr],'FontSize',28,...
-                'HorizontalAlignment','center','FontColor',app.txtColor,'FontWeight','bold');
+                'HorizontalAlignment','center','FontColor',app.txtColor,'FontWeight','bold', 'Tag', 'ThemeableLabel');
             lblTitle.Layout.Row=1;
             
-            lblDesc = uilabel(grid,'Text',name,'HorizontalAlignment','center','FontColor',app.txtColor,'FontSize',20);
-            lblDesc.Layout.Row=2;
+            % MBTI 이미지 표시 (제목과 설명 사이)
+            imgObj = uiimage(grid);
+            imgObj.Layout.Row = 2;
+            imgObj.HorizontalAlignment = 'center';
+            imgFile = [mbtiStr, '.png']; % 예: ENTP.png
+            if exist(imgFile, 'file')
+                imgObj.ImageSource = imgFile;
+            else
+                imgObj.AltText = '이미지를 찾을 수 없습니다.';
+            end
             
-            lblBase = uilabel(grid,'Text',['주 사용 환경: ',base],'HorizontalAlignment','center','FontColor',app.txtColor,'FontSize',16);
-            lblBase.Layout.Row=3;
+            lblDesc = uilabel(grid,'Text',name,'HorizontalAlignment','center','FontColor',app.txtColor,'FontSize',20, 'Tag', 'ThemeableLabel');
+            lblDesc.Layout.Row=3;
             
-            lblTool = uilabel(grid,'Text',['추천 툴박스: ',tool],'HorizontalAlignment','center','FontColor',app.txtColor,'FontSize',16);
-            lblTool.Layout.Row=4;
+            lblBase = uilabel(grid,'Text',['주 사용 환경: ',base],'HorizontalAlignment','center','FontColor',app.txtColor,'FontSize',16, 'Tag', 'ThemeableLabel');
+            lblBase.Layout.Row=4;
             
-            lblSpace = uilabel(grid,'Text','','HorizontalAlignment','center');
-            lblSpace.Layout.Row=5;
+            lblTool = uilabel(grid,'Text',['추천 툴박스: ',tool],'HorizontalAlignment','center','FontColor',app.txtColor,'FontSize',16, 'Tag', 'ThemeableLabel');
+            lblTool.Layout.Row=5;
             
-            hbox = uigridlayout(grid,[1 3]);
-            hbox.Layout.Row=6;
+            lblPair = uilabel(grid,'Text',['환상의 짝궁: ', best, '  |  환장의 짝궁: ', worst], ...
+                'HorizontalAlignment','center','FontColor',app.txtColor,'FontSize',16, 'Tag', 'ThemeableLabel');
+            lblPair.Layout.Row=6;
+            
+            hbox = uigridlayout(grid,[1 4]);
+            hbox.Layout.Row=7;
             hbox.ColumnSpacing = 16;
-            hbox.RowHeight = {100}; % 결과 화면 버튼 높이 확보            
-            linkTxt = '제품 보기'; retryTxt = '다시 하기'; closeTxt = '종료';
+            hbox.RowHeight = {120}; % 결과 화면 버튼 높이 확보            
+            linkTxt = '제품 보기'; retryTxt = '다시 하기'; closeTxt = '종료'; saveTxt = '결과 저장';
             if strcmp(app.lang,'en')
                 lblTitle.Text = ['Your Engineering MBTI: ', mbtiStr];
                 lblBase.Text = ['Environment: ', base];
                 lblTool.Text = ['Recommended Tool: ', tool];
-                linkTxt = 'Products'; retryTxt = 'Retry'; closeTxt = 'Exit'; 
+                lblPair.Text = ['Best Match: ', best, '  |  Worst Match: ', worst];
+                linkTxt = 'Products'; retryTxt = 'Retry'; closeTxt = 'Exit'; saveTxt = 'Save Result Image';
             end
             
             btnLink = uibutton(hbox,'push','Text',linkTxt,'BackgroundColor',app.btnColorKo,'FontColor','white','FontSize',16,'FontWeight','bold',...
@@ -328,11 +369,107 @@ classdef MBTIApp < matlab.apps.AppBase
                 'ButtonPushedFcn',@(s,e)app.safeInvoke(@()app.start(app.lang)));
             btnClose = uibutton(hbox,'push','Text',closeTxt,'BackgroundColor',app.btnColorExit,'FontColor','white',...
                 'FontSize',16,'FontWeight','bold',...
-                'ButtonPushedFcn',@(s,e)app.safeInvoke(@()delete(app.UIFigure)));
+                'ButtonPushedFcn',@(s,e)app.safeInvoke(@()delete(app)));
+            btnSave = uibutton(hbox,'push','Text',saveTxt,'BackgroundColor',app.btnColorKo,'FontColor','white',...
+                'FontSize',16,'FontWeight','bold',...
+                'ButtonPushedFcn',@(s,e)app.safeInvoke(@()app.saveResultImage()));
         end
 
     end
     methods (Access = private)
+        function saveResultImage(app)
+            if strcmp(app.lang, 'ko')
+                defaultName = 'MBTI_결과.png';
+                dialogTitle = '결과 이미지 저장';
+                successMsg = '결과 이미지가 성공적으로 저장되었습니다.';
+                errorMsg = '이미지 저장에 실패했습니다.';
+            else
+                defaultName = 'MBTI_Result.png';
+                dialogTitle = 'Save Result Image';
+                successMsg = 'Result image saved successfully.';
+                errorMsg = 'Failed to save image.';
+            end
+
+            [filename, pathname] = uiputfile('*.png', dialogTitle, defaultName);
+            if isequal(filename, 0) || isequal(pathname, 0)
+                % User cancelled
+                return;
+            end
+
+            fullFileName = fullfile(pathname, filename);
+
+            try
+                exportgraphics(app.ResultPanel, fullFileName, 'BackgroundColor', app.bgColor);
+                if isvalid(app.UIFigure)
+                    uialert(app.UIFigure, successMsg, 'Success', 'Icon', 'success');
+                end
+            catch ex
+                if isvalid(app.UIFigure)
+                    uialert(app.UIFigure, [errorMsg, newline, ex.message], 'Error', 'Icon', 'error');
+                else
+                    warning('%s\n%s', errorMsg, ex.message);
+                end
+            end
+        end
+    end
+
+    methods
+        function val = get.bgColor(app)
+            if strcmp(app.theme, 'light')
+                val = app.lightColors.bg;
+            else
+                val = app.darkColors.bg;
+            end
+        end
+
+        function val = get.txtColor(app)
+            if strcmp(app.theme, 'light')
+                val = app.lightColors.txt;
+            else
+                val = app.darkColors.txt;
+            end
+        end
+    end
+
+    methods (Access = private)
+        function toggleTheme(app, src, ~)
+            if strcmp(app.theme, 'light')
+                app.theme = 'dark';
+                src.Text = '☀️'; % Sun icon for switching to light
+            else
+                app.theme = 'light';
+                src.Text = '🌙'; % Moon icon for switching to dark
+            end
+            app.updateUITheme();
+        end
+
+        function updateUITheme(app)
+            % Update backgrounds
+            app.UIFigure.Color = app.bgColor;
+            app.StartPanel.BackgroundColor = app.bgColor;
+            app.QuestionPanel.BackgroundColor = app.bgColor;
+            app.ResultPanel.BackgroundColor = app.bgColor;
+
+            % Update labels
+            labels = findall(app.UIFigure, 'Type', 'uilabel', 'Tag', 'ThemeableLabel');
+            for i = 1:numel(labels)
+                labels(i).FontColor = app.txtColor;
+            end
+
+            % Update axes
+            axes = findall(app.UIFigure, 'Type', 'uiaxes', 'Tag', 'ThemeableAxes');
+            for i = 1:numel(axes)
+                axes(i).BackgroundColor = app.hex2rgb(app.bgColor);
+                axes(i).Title.Color = app.txtColor;
+            end
+
+            % Update buttons with themeable font color
+            buttons = findall(app.UIFigure, 'Type', 'uibutton', 'Tag', 'ThemeableButtonFont');
+            for i = 1:numel(buttons)
+                buttons(i).FontColor = app.txtColor;
+            end
+        end
+
         function openLink(app)
             try
                 web('http://www.mathworks.com/products.html');
