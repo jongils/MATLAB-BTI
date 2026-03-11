@@ -101,8 +101,10 @@ Alternatively, open `MBTIApp.m` in **MATLAB App Designer** and click **Run**.
 ```
 MBTI/
 ├── MBTIApp.m              # Main MATLAB App Designer application
-├── Q1.png ~ Q12.png       # Question illustration images (not included)
-├── ENTP.png ~ ISFJ.png    # MBTI result images (not included)
+├── images/
+│   ├── mbti/              # MBTI type icons (ENTP.png ~ ISFJ.png) — add icons here
+│   ├── questions/         # Question illustration images (Q1.png ~ Q12.png)
+│   └── matlab_logo.png    # (Optional) Custom fallback logo when MBTI icon is missing
 ├── .devcontainer/
 │   └── devcontainer.json  # Dev container configuration for cloud development
 ├── .vscode/
@@ -111,7 +113,7 @@ MBTI/
 └── README.md              # This file
 ```
 
-> **Note:** Question images (`Q1.png`–`Q12.png`) and result images (`ENTP.png`, `INFP.png`, etc.) are referenced by the application but are not included in this repository. The app will still run without them.
+> **Note:** MBTI icon images (`images/mbti/ENTP.png`, etc.) and question images (`images/questions/Q1.png`–`Q12.png`) are not included in this repository. When an MBTI icon is missing, the app falls back in order: `images/matlab_logo.png` → MATLAB built-in icon.
 
 ---
 
@@ -216,8 +218,10 @@ MBTIApp
 ```
 MBTI/
 ├── MBTIApp.m              # MATLAB App Designer 메인 애플리케이션
-├── Q1.png ~ Q12.png       # 질문 삽화 이미지 (저장소 미포함)
-├── ENTP.png ~ ISFJ.png    # MBTI 결과 이미지 (저장소 미포함)
+├── images/
+│   ├── mbti/              # MBTI 유형별 아이콘 (ENTP.png ~ ISFJ.png) — 여기에 추가
+│   ├── questions/         # 질문 삽화 이미지 (Q1.png ~ Q12.png)
+│   └── matlab_logo.png    # (선택) MBTI 아이콘 없을 때 대체할 커스텀 로고
 ├── .devcontainer/
 │   └── devcontainer.json  # 클라우드 개발용 Dev Container 설정
 ├── .vscode/
@@ -226,4 +230,4 @@ MBTI/
 └── README.md              # 이 파일
 ```
 
-> **참고:** 질문 이미지(`Q1.png`–`Q12.png`) 및 결과 이미지(`ENTP.png`, `INFP.png` 등)는 앱에서 참조하지만 이 저장소에는 포함되어 있지 않습니다. 이미지 없이도 앱은 정상적으로 실행됩니다.
+> **참고:** MBTI 아이콘(`images/mbti/ENTP.png` 등) 및 질문 이미지(`images/questions/Q1.png`–`Q12.png`)는 저장소에 포함되어 있지 않습니다. MBTI 아이콘이 없으면 순서대로 대체됩니다: `images/matlab_logo.png` → MATLAB 설치 기본 아이콘.

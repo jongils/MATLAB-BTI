@@ -16,6 +16,14 @@ classdef MBTIApp < matlab.apps.AppBase
         questionIndex = 0;
         answers = ''; % store choices as char array
         theme = 'light'; % 'light' or 'dark'
+        % 현재 결과 데이터 (이미지 내보내기용)
+        currentMbti   = '';
+        currentName   = '';
+        currentNameEn = '';
+        currentBase   = '';
+        currentTool   = '';
+        currentBest   = '';
+        currentWorst  = '';
     end
 
     properties (Dependent, Access = private)
@@ -174,9 +182,10 @@ classdef MBTIApp < matlab.apps.AppBase
             img = uiimage(grid);
             img.Layout.Row = 3;
             img.HorizontalAlignment = 'center';
-            imgFile = sprintf('Q%d.png', app.questionIndex);
-            if exist(imgFile, 'file')
-                img.ImageSource = imgFile;
+            imgFile = fullfile('images', 'questions', sprintf('Q%d.png', app.questionIndex));
+            imgPath = app.getImageWithFallback(imgFile);
+            if ~isempty(imgPath)
+                img.ImageSource = imgPath;
             else
                 img.AltText = ''; % 이미지가 없으면 빈 공간으로 둠
             end
@@ -296,73 +305,109 @@ classdef MBTIApp < matlab.apps.AppBase
             
             % Map to 16 Types
             switch mbtiStr
-                case 'ENTP', name='머신러닝/딥러닝 어플리케이션 개발'; base='MATLAB'; tool='Deep Learning Toolbox'; best='INFJ'; worst='ISFJ';
-                case 'ESTP', name='시스템 엔지니어링 (아키텍처 설계)'; base='MATLAB'; tool='System Composer'; best='ISFJ'; worst='INFP';
-                case 'INTP', name='데이터 분석'; base='MATLAB'; tool='Statistics & Machine Learning Toolbox'; best='ENTJ'; worst='ESFJ';
-                case 'ISTP', name='순수한 매트랩 프로그래머'; base='MATLAB'; tool='MATLAB Coder'; best='ESFJ'; worst='ENFP';
-                case 'ENTJ', name='자율 주행/ADAS 어플리케이션 개발'; base='MATLAB'; tool='Automated Driving Toolbox'; best='INTP'; worst='ISFP';
-                case 'ESTJ', name='소프트웨어 엔지니어링 (검증 작업)'; base='MATLAB/Simulink'; tool='Simulink Test & Check'; best='ISTP'; worst='INFP';
-                case 'INTJ', name='주파수 등 신호처리 및 분석'; base='MATLAB'; tool='Signal Processing Toolbox'; best='ENFP'; worst='ESFP';
-                case 'ISTJ', name='제어 알고리즘 개발자 (매트랩 프로그래밍)'; base='MATLAB'; tool='Control System Toolbox'; best='ESFP'; worst='ENFJ';
-                case 'ENFP', name='ROS, DDS, Adaptive AUTOSAR 플랫폼 적용'; base='Simulink'; tool='ROS Toolbox / AUTOSAR Blockset'; best='INTJ'; worst='ISTJ';
-                case 'ESFP', name='ASPICE, 기능 안전 고려한 소프트웨어 개발'; base='Simulink'; tool='Requirements Toolbox'; best='ISTJ'; worst='INTJ';
-                case 'INFP', name='자동 코드 생성'; base='Simulink'; tool='Embedded Coder'; best='ENFJ'; worst='ESTJ';
-                case 'ISFP', name='매트랩/시뮬링크 초보자'; base='Simulink'; tool='Simulink Onramp'; best='ESFJ'; worst='ENTJ';
-                case 'ENFJ', name='로봇 등 메카닉 구현'; base='Simulink'; tool='Robotics System Toolbox'; best='INFP'; worst='ISTJ';
-                case 'ESFJ', name='플랜트 모델링 및 시뮬레이션'; base='Simulink'; tool='Simscape'; best='ISFP'; worst='INTP';
-                case 'INFJ', name='제어 알고리즘 개발자 (시뮬링크 모델 이용)'; base='Simulink'; tool='Simulink Control Design'; best='ENTP'; worst='ESTP';
-                case 'ISFJ', name='모터 제어 등 전동화'; base='Simulink'; tool='Motor Control Blockset'; best='ESTP'; worst='ENTP';
-                otherwise,   name='Unknown'; base='N/A'; tool='N/A'; best='-'; worst='-';
+                case 'ENTP', name='머신러닝/딥러닝 어플리케이션 개발'; nameEn='ML/DL App Developer';                  base='MATLAB';          tool='Deep Learning Toolbox';            best='INFJ'; worst='ISFJ';
+                case 'ESTP', name='시스템 엔지니어링 (아키텍처 설계)';  nameEn='Systems Engineering (Architecture)'; base='MATLAB';          tool='System Composer';                  best='ISFJ'; worst='INFP';
+                case 'INTP', name='데이터 분석';                         nameEn='Data Analyst';                       base='MATLAB';          tool='Statistics & Machine Learning Toolbox'; best='ENTJ'; worst='ESFJ';
+                case 'ISTP', name='순수한 매트랩 프로그래머';            nameEn='Pure MATLAB Programmer';             base='MATLAB';          tool='MATLAB Coder';                     best='ESFJ'; worst='ENFP';
+                case 'ENTJ', name='자율 주행/ADAS 어플리케이션 개발';   nameEn='Autonomous Driving / ADAS Developer'; base='MATLAB';         tool='Automated Driving Toolbox';        best='INTP'; worst='ISFP';
+                case 'ESTJ', name='소프트웨어 엔지니어링 (검증 작업)';  nameEn='Software Engineering (Verification)'; base='MATLAB/Simulink'; tool='Simulink Test & Check';            best='ISTP'; worst='INFP';
+                case 'INTJ', name='주파수 등 신호처리 및 분석';          nameEn='Signal Processing & Analysis';        base='MATLAB';          tool='Signal Processing Toolbox';        best='ENFP'; worst='ESFP';
+                case 'ISTJ', name='제어 알고리즘 개발자 (매트랩 프로그래밍)'; nameEn='Control Algorithm Developer (MATLAB)'; base='MATLAB';   tool='Control System Toolbox';           best='ESFP'; worst='ENFJ';
+                case 'ENFP', name='ROS, DDS, Adaptive AUTOSAR 플랫폼 적용'; nameEn='ROS / DDS / AUTOSAR Platform';   base='Simulink';        tool='ROS Toolbox / AUTOSAR Blockset';   best='INTJ'; worst='ISTJ';
+                case 'ESFP', name='ASPICE, 기능 안전 고려한 소프트웨어 개발'; nameEn='ASPICE & Functional Safety';    base='Simulink';        tool='Requirements Toolbox';             best='ISTJ'; worst='INTJ';
+                case 'INFP', name='자동 코드 생성';                      nameEn='Auto Code Generation';               base='Simulink';        tool='Embedded Coder';                   best='ENFJ'; worst='ESTJ';
+                case 'ISFP', name='매트랩/시뮬링크 초보자';              nameEn='MATLAB / Simulink Beginner';          base='Simulink';        tool='Simulink Onramp';                  best='ESFJ'; worst='ENTJ';
+                case 'ENFJ', name='로봇 등 메카닉 구현';                 nameEn='Robotics & Mechanical Implementation'; base='Simulink';      tool='Robotics System Toolbox';          best='INFP'; worst='ISTJ';
+                case 'ESFJ', name='플랜트 모델링 및 시뮬레이션';        nameEn='Plant Modeling & Simulation';         base='Simulink';        tool='Simscape';                         best='ISFP'; worst='INTP';
+                case 'INFJ', name='제어 알고리즘 개발자 (시뮬링크 모델 이용)'; nameEn='Control Algorithm Developer (Simulink)'; base='Simulink'; tool='Simulink Control Design';     best='ENTP'; worst='ESTP';
+                case 'ISFJ', name='모터 제어 등 전동화';                 nameEn='Motor Control & Electrification';     base='Simulink';        tool='Motor Control Blockset';           best='ESTP'; worst='ENTP';
+                otherwise,   name='Unknown'; nameEn='Unknown'; base='N/A'; tool='N/A'; best='-'; worst='-';
             end
+
+            % 현재 결과 데이터 저장 (이미지 내보내기용)
+            app.currentMbti    = mbtiStr;
+            app.currentName    = name;
+            app.currentNameEn  = nameEn;
+            app.currentBase    = base;
+            app.currentTool    = tool;
+            app.currentBest    = best;
+            app.currentWorst   = worst;
 
             % Build result UI
             grid = uigridlayout(app.ResultPanel,[8 1]);
-            grid.RowHeight = {'fit',200,'fit','fit','fit','fit','fit','1x'}; % 2번째 행에 이미지 높이(200px) 할당
+            grid.RowHeight = {'fit', 200, 'fit', 'fit', 'fit', 'fit', 'fit', '1x'};
             grid.Padding = [20 50 20 20];
             grid.RowSpacing = 24;
-            
-            % MBTI 텍스트 출력
+
+            % Row 1: MBTI 텍스트 출력
             lblTitle = uilabel(grid,'Text',['당신의 엔지니어링 MBTI는: ', mbtiStr],'FontSize',28,...
                 'HorizontalAlignment','center','FontColor',app.txtColor,'FontWeight','bold', 'Tag', 'ThemeableLabel');
-            lblTitle.Layout.Row=1;
-            
-            % MBTI 이미지 표시 (제목과 설명 사이)
-            imgObj = uiimage(grid);
-            imgObj.Layout.Row = 2;
-            imgObj.HorizontalAlignment = 'center';
-            imgFile = [mbtiStr, '.png']; % 예: ENTP.png
-            if exist(imgFile, 'file')
-                imgObj.ImageSource = imgFile;
-            else
-                imgObj.AltText = '이미지를 찾을 수 없습니다.';
-            end
-            
+            lblTitle.Layout.Row = 1;
+
+            % Row 2: 메인 MBTI 이미지 (라운드 코너 16px)
+            mainImg = app.createRoundedImage(grid, app.getMbtiImagePath(mbtiStr), 16);
+            mainImg.Layout.Row = 2;
+
+            % Row 3: 역할 설명
             lblDesc = uilabel(grid,'Text',name,'HorizontalAlignment','center','FontColor',app.txtColor,'FontSize',20, 'Tag', 'ThemeableLabel');
-            lblDesc.Layout.Row=3;
-            
+            lblDesc.Layout.Row = 3;
+
+            % Row 4: 주 사용 환경
             lblBase = uilabel(grid,'Text',['주 사용 환경: ',base],'HorizontalAlignment','center','FontColor',app.txtColor,'FontSize',16, 'Tag', 'ThemeableLabel');
-            lblBase.Layout.Row=4;
-            
+            lblBase.Layout.Row = 4;
+
+            % Row 5: 추천 툴박스
             lblTool = uilabel(grid,'Text',['추천 툴박스: ',tool],'HorizontalAlignment','center','FontColor',app.txtColor,'FontSize',16, 'Tag', 'ThemeableLabel');
-            lblTool.Layout.Row=5;
-            
-            lblPair = uilabel(grid,'Text',['환상의 짝궁: ', best, '  |  환장의 짝궁: ', worst], ...
-                'HorizontalAlignment','center','FontColor',app.txtColor,'FontSize',16, 'Tag', 'ThemeableLabel');
-            lblPair.Layout.Row=6;
-            
+            lblTool.Layout.Row = 5;
+
+            % Row 6: 짝꿍 이미지 섹션 (3행×2열 서브 그리드)
+            pairGrid = uigridlayout(grid, [3 2]);
+            pairGrid.Layout.Row = 6;
+            pairGrid.RowHeight = {'fit', 130, 'fit'};
+            pairGrid.ColumnWidth = {'1x', '1x'};
+            pairGrid.ColumnSpacing = 20;
+            pairGrid.RowSpacing = 6;
+            pairGrid.Padding = [10 0 10 0];
+
+            lblBestHdr = uilabel(pairGrid, 'Text', '환상의 짝꿍', 'HorizontalAlignment', 'center', ...
+                'FontColor', '#218838', 'FontSize', 14, 'FontWeight', 'bold');
+            lblBestHdr.Layout.Row = 1; lblBestHdr.Layout.Column = 1;
+
+            lblWorstHdr = uilabel(pairGrid, 'Text', '환장의 짝꿍', 'HorizontalAlignment', 'center', ...
+                'FontColor', '#DC3545', 'FontSize', 14, 'FontWeight', 'bold');
+            lblWorstHdr.Layout.Row = 1; lblWorstHdr.Layout.Column = 2;
+
+            % 짝꿍 이미지 (라운드 코너 12px)
+            bestImg = app.createRoundedImage(pairGrid, app.getMbtiImagePath(best), 12);
+            bestImg.Layout.Row = 2; bestImg.Layout.Column = 1;
+
+            worstImg = app.createRoundedImage(pairGrid, app.getMbtiImagePath(worst), 12);
+            worstImg.Layout.Row = 2; worstImg.Layout.Column = 2;
+
+            lblBestType = uilabel(pairGrid, 'Text', best, 'HorizontalAlignment', 'center', ...
+                'FontColor', app.txtColor, 'FontSize', 16, 'FontWeight', 'bold', 'Tag', 'ThemeableLabel');
+            lblBestType.Layout.Row = 3; lblBestType.Layout.Column = 1;
+
+            lblWorstType = uilabel(pairGrid, 'Text', worst, 'HorizontalAlignment', 'center', ...
+                'FontColor', app.txtColor, 'FontSize', 16, 'FontWeight', 'bold', 'Tag', 'ThemeableLabel');
+            lblWorstType.Layout.Row = 3; lblWorstType.Layout.Column = 2;
+
+            % Row 7: 버튼
             hbox = uigridlayout(grid,[1 4]);
-            hbox.Layout.Row=7;
+            hbox.Layout.Row = 7;
             hbox.ColumnSpacing = 16;
-            hbox.RowHeight = {120}; % 결과 화면 버튼 높이 확보            
+            hbox.RowHeight = {120};
             linkTxt = '제품 보기'; retryTxt = '다시 하기'; closeTxt = '종료'; saveTxt = '결과 저장';
             if strcmp(app.lang,'en')
-                lblTitle.Text = ['Your Engineering MBTI: ', mbtiStr];
-                lblBase.Text = ['Environment: ', base];
-                lblTool.Text = ['Recommended Tool: ', tool];
-                lblPair.Text = ['Best Match: ', best, '  |  Worst Match: ', worst];
+                lblTitle.Text    = ['Your Engineering MBTI: ', mbtiStr];
+                lblDesc.Text     = nameEn;
+                lblBase.Text     = ['Environment: ', base];
+                lblTool.Text     = ['Recommended Tool: ', tool];
+                lblBestHdr.Text  = 'Best Match';
+                lblWorstHdr.Text = 'Worst Match';
                 linkTxt = 'Products'; retryTxt = 'Retry'; closeTxt = 'Exit'; saveTxt = 'Save Result Image';
             end
-            
+
             btnLink = uibutton(hbox,'push','Text',linkTxt,'BackgroundColor',app.btnColorKo,'FontColor','white','FontSize',16,'FontWeight','bold',...
                 'ButtonPushedFcn',@(s,e)app.safeInvoke(@()app.openLink()));
             btnRetry = uibutton(hbox,'push','Text',retryTxt,'BackgroundColor',app.btnColorEn,'FontColor','white','FontSize',16,'FontWeight','bold',...
@@ -378,28 +423,26 @@ classdef MBTIApp < matlab.apps.AppBase
     end
     methods (Access = private)
         function saveResultImage(app)
+            % 파일명: MBTI_<유형>.png (예: MBTI_ESTJ.png)
+            defaultName = ['MBTI_', app.currentMbti, '.png'];
             if strcmp(app.lang, 'ko')
-                defaultName = 'MBTI_결과.png';
                 dialogTitle = '결과 이미지 저장';
-                successMsg = '결과 이미지가 성공적으로 저장되었습니다.';
-                errorMsg = '이미지 저장에 실패했습니다.';
+                successMsg  = '결과 이미지가 성공적으로 저장되었습니다.';
+                errorMsg    = '이미지 저장에 실패했습니다.';
             else
-                defaultName = 'MBTI_Result.png';
                 dialogTitle = 'Save Result Image';
-                successMsg = 'Result image saved successfully.';
-                errorMsg = 'Failed to save image.';
+                successMsg  = 'Result image saved successfully.';
+                errorMsg    = 'Failed to save image.';
             end
 
             [filename, pathname] = uiputfile('*.png', dialogTitle, defaultName);
             if isequal(filename, 0) || isequal(pathname, 0)
-                % User cancelled
                 return;
             end
 
             fullFileName = fullfile(pathname, filename);
-
             try
-                exportgraphics(app.ResultPanel, fullFileName, 'BackgroundColor', app.bgColor);
+                app.buildAndExportResultImage(fullFileName);
                 if isvalid(app.UIFigure)
                     uialert(app.UIFigure, successMsg, 'Success', 'Icon', 'success');
                 end
@@ -410,6 +453,124 @@ classdef MBTIApp < matlab.apps.AppBase
                     warning('%s\n%s', errorMsg, ex.message);
                 end
             end
+        end
+
+        function buildAndExportResultImage(app, fullFileName)
+            % 버튼을 제외한 결과 내용 + MATLAB 로고를 포함한
+            % 임시 figure를 생성하여 이미지로 내보냄
+            figPos = app.UIFigure.Position;
+            tmpFig = uifigure('Visible', 'on', 'Color', app.bgColor, ...
+                'Position', [figPos(1)+figPos(3)+10, figPos(2), figPos(3), figPos(4)], ...
+                'Name', 'Exporting...');
+            try
+                % 언어에 따른 표시 텍스트 결정
+                if strcmp(app.lang, 'ko')
+                    titleTxt    = ['당신의 엔지니어링 MBTI는: ', app.currentMbti];
+                    descTxt     = app.currentName;
+                    baseTxt     = ['주 사용 환경: ', app.currentBase];
+                    toolTxt     = ['추천 툴박스: ', app.currentTool];
+                    bestHdrTxt  = '환상의 짝꿍';
+                    worstHdrTxt = '환장의 짝꿍';
+                    logoLblTxt  = 'Engineering MBTI powered by MATLAB';
+                else
+                    titleTxt    = ['Your Engineering MBTI: ', app.currentMbti];
+                    descTxt     = app.currentNameEn;
+                    baseTxt     = ['Environment: ', app.currentBase];
+                    toolTxt     = ['Recommended Tool: ', app.currentTool];
+                    bestHdrTxt  = 'Best Match';
+                    worstHdrTxt = 'Worst Match';
+                    logoLblTxt  = 'Engineering MBTI powered by MATLAB';
+                end
+
+                % 메인 그리드 (버튼 행 없음, 마지막 행에 MATLAB 로고)
+                expGrid = uigridlayout(tmpFig, [8 1]);
+                expGrid.RowHeight = {'fit', 200, 'fit', 'fit', 'fit', 'fit', 100, 'fit'};
+                expGrid.Padding   = [20 30 20 20];
+                expGrid.RowSpacing = 20;
+
+                % Row 1: 제목
+                r1 = uilabel(expGrid, 'Text', titleTxt, 'FontSize', 28, ...
+                    'HorizontalAlignment', 'center', 'FontColor', app.txtColor, 'FontWeight', 'bold');
+                r1.Layout.Row = 1;
+
+                % Row 2: 메인 MBTI 이미지 (라운드 코너)
+                r2 = app.createRoundedImage(expGrid, app.getMbtiImagePath(app.currentMbti), 16);
+                r2.Layout.Row = 2;
+
+                % Row 3: 역할 설명
+                r3 = uilabel(expGrid, 'Text', descTxt, 'HorizontalAlignment', 'center', ...
+                    'FontColor', app.txtColor, 'FontSize', 20);
+                r3.Layout.Row = 3;
+
+                % Row 4: 주 사용 환경
+                r4 = uilabel(expGrid, 'Text', baseTxt, 'HorizontalAlignment', 'center', ...
+                    'FontColor', app.txtColor, 'FontSize', 16);
+                r4.Layout.Row = 4;
+
+                % Row 5: 추천 툴박스
+                r5 = uilabel(expGrid, 'Text', toolTxt, 'HorizontalAlignment', 'center', ...
+                    'FontColor', app.txtColor, 'FontSize', 16);
+                r5.Layout.Row = 5;
+
+                % Row 6: 짝꿍 이미지 섹션
+                pairGrid = uigridlayout(expGrid, [3 2]);
+                pairGrid.Layout.Row = 6;
+                pairGrid.RowHeight  = {'fit', 130, 'fit'};
+                pairGrid.ColumnWidth = {'1x', '1x'};
+                pairGrid.ColumnSpacing = 20;
+                pairGrid.RowSpacing = 6;
+                pairGrid.Padding = [10 0 10 0];
+
+                lbh = uilabel(pairGrid, 'Text', bestHdrTxt, 'HorizontalAlignment', 'center', ...
+                    'FontColor', '#218838', 'FontSize', 14, 'FontWeight', 'bold');
+                lbh.Layout.Row = 1; lbh.Layout.Column = 1;
+                lwh = uilabel(pairGrid, 'Text', worstHdrTxt, 'HorizontalAlignment', 'center', ...
+                    'FontColor', '#DC3545', 'FontSize', 14, 'FontWeight', 'bold');
+                lwh.Layout.Row = 1; lwh.Layout.Column = 2;
+
+                bi = app.createRoundedImage(pairGrid, app.getMbtiImagePath(app.currentBest), 12);
+                bi.Layout.Row = 2; bi.Layout.Column = 1;
+                wi = app.createRoundedImage(pairGrid, app.getMbtiImagePath(app.currentWorst), 12);
+                wi.Layout.Row = 2; wi.Layout.Column = 2;
+
+                lbt = uilabel(pairGrid, 'Text', app.currentBest, 'HorizontalAlignment', 'center', ...
+                    'FontColor', app.txtColor, 'FontSize', 16, 'FontWeight', 'bold');
+                lbt.Layout.Row = 3; lbt.Layout.Column = 1;
+                lwt = uilabel(pairGrid, 'Text', app.currentWorst, 'HorizontalAlignment', 'center', ...
+                    'FontColor', app.txtColor, 'FontSize', 16, 'FontWeight', 'bold');
+                lwt.Layout.Row = 3; lwt.Layout.Column = 2;
+
+                % Row 7: MATLAB 로고 (우측 하단 정렬, 2배 크기)
+                % 3열 구조: [spacer 1x] | [텍스트 fit] | [로고 80px]
+                logoGrid = uigridlayout(expGrid, [1 3]);
+                logoGrid.Layout.Row    = 7;
+                logoGrid.ColumnWidth   = {'1x', 'fit', 80};
+                logoGrid.ColumnSpacing = 8;
+                logoGrid.Padding       = [10 4 10 4];
+
+                logoLbl = uilabel(logoGrid, 'Text', logoLblTxt, ...
+                    'FontSize', 22, 'FontColor', [0.5 0.5 0.5], 'HorizontalAlignment', 'right');
+                logoLbl.Layout.Column = 2;
+
+                matlabLogoPath = fullfile('images', 'matlab_logo.png');
+                if ~exist(matlabLogoPath, 'file')
+                    matlabLogoPath = fullfile(matlabroot, 'toolbox', 'matlab', 'icons', 'matlabicon.gif');
+                end
+                if exist(matlabLogoPath, 'file')
+                    logoImg = uiimage(logoGrid);
+                    logoImg.ImageSource = matlabLogoPath;
+                    logoImg.Layout.Column = 3;
+                end
+
+                % uihtml 렌더링 대기 후 내보내기
+                drawnow;
+                pause(0.5);
+                exportapp(tmpFig, fullFileName);
+            catch ex
+                delete(tmpFig);
+                rethrow(ex);
+            end
+            delete(tmpFig);
         end
     end
 
@@ -507,6 +668,65 @@ classdef MBTIApp < matlab.apps.AppBase
         function idx = langIdx(app)
             % return 1 for Korean, 2 for English — used to index bilingual cell arrays
             idx = 1 + ~strcmp(app.lang,'ko');
+        end
+
+        function h = createRoundedImage(app, parent, imgPath, radius)
+            % uihtml을 사용하여 라운드 코너 이미지 생성
+            % 이미지 파일을 base64로 인코딩하여 HTML에 직접 삽입 (file:// 보안 제한 우회)
+            h = uihtml(parent);
+            if ~isempty(imgPath) && exist(imgPath, 'file')
+                fid = fopen(imgPath, 'rb');
+                data = fread(fid, '*uint8');
+                fclose(fid);
+                b64 = matlab.net.base64encode(data);
+                [~, ~, ext] = fileparts(imgPath);
+                switch lower(ext)
+                    case {'.jpg', '.jpeg'}, mime = 'image/jpeg';
+                    case '.gif',            mime = 'image/gif';
+                    otherwise,              mime = 'image/png';
+                end
+                h.HTMLSource = sprintf([ ...
+                    '<style>' ...
+                    'html,body{margin:0;padding:0;width:100%%;height:100%%;' ...
+                    'display:flex;align-items:center;justify-content:center;' ...
+                    'background-color:%s;}' ...
+                    'img{max-width:100%%;max-height:100%%;' ...
+                    'border-radius:%dpx;object-fit:contain;}' ...
+                    '</style>' ...
+                    '<img src="data:%s;base64,%s">'], ...
+                    app.bgColor, radius, mime, b64);
+            else
+                h.HTMLSource = sprintf( ...
+                    '<html><body style="margin:0;background-color:%s;"></body></html>', ...
+                    app.bgColor);
+            end
+        end
+
+        function imgPath = getMbtiImagePath(app, mbtiStr)
+            % 1순위: images/mbti/<MBTI>.png
+            imgPath = app.getImageWithFallback(fullfile('images', 'mbti', [mbtiStr, '.png']));
+        end
+
+        function imgPath = getImageWithFallback(~, primaryPath)
+            % 지정 이미지가 있으면 반환, 없으면 순서대로 대체
+            if exist(primaryPath, 'file')
+                imgPath = primaryPath;
+                return;
+            end
+            % 2순위: images/matlab_logo.png (사용자가 직접 추가한 로고)
+            logoPath = fullfile('images', 'matlab_logo.png');
+            if exist(logoPath, 'file')
+                imgPath = logoPath;
+                return;
+            end
+            % 3순위: MATLAB 설치 경로의 기본 아이콘
+            builtinIcon = fullfile(matlabroot, 'toolbox', 'matlab', 'icons', 'matlabicon.gif');
+            if exist(builtinIcon, 'file')
+                imgPath = builtinIcon;
+                return;
+            end
+            % 이미지 없음
+            imgPath = '';
         end
     end
     methods (Access = public)
