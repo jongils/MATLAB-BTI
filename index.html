@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Engineering MBTI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&family=Noto+Serif+KR:wght@700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #F8F9FA;
+  --surface: #ffffff;
+  --surface2: #f0f2f5;
+  --txt: #212529;
+  --muted: #6c757d;
+  --border: #dee2e6;
+  --btn-ko: #007BFF;
+  --btn-en: #E83E8C;
+  --btn-a: #218838;
+  --btn-b-bg: #FFC107;
+  --btn-b-txt: #212529;
+  --btn-skip: #17A2B8;
+  --btn-back: #495057;
+  --btn-exit: #6C757D;
+  --accent: #007BFF;
+  --shadow: 0 2px 16px rgba(0,0,0,0.08);
+  --radius: 14px;
+}
+[data-theme="dark"] {
+  --bg: #212529;
+  --surface: #2c3034;
+  --surface2: #343a40;
+  --txt: #F8F9FA;
+  --muted: #adb5bd;
+  --border: #495057;
+  --shadow: 0 2px 20px rgba(0,0,0,0.4);
+}
+
+html, body { min-height: 100vh; background: var(--bg); color: var(--txt); font-family: 'Noto Sans KR', sans-serif; transition: background 0.3s, color 0.3s; }
+#app { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 2rem 1rem; }
+
+.card {
+  width: 100%; max-width: 480px;
+  background: var(--surface);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+
+.screen { display: none; padding: 2rem 2rem 1.8rem; }
+.screen.active { display: block; animation: fadeUp 0.3s ease both; }
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* topbar */
+.topbar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0.85rem 1.4rem; border-bottom: 1px solid var(--border);
+}
+.topbar-title { font-size: 15px; font-weight: 700; }
+.theme-btn {
+  background: none; border: 1px solid var(--border);
+  border-radius: 8px; padding: 3px 10px; font-size: 16px;
+  cursor: pointer; transition: background 0.2s; color: var(--txt);
+}
+.theme-btn:hover { background: var(--surface2); }
+
+/* intro */
+.intro-hero { text-align: center; padding: 2rem 0 1.2rem; }
+.intro-hero h1 {
+  font-family: 'Noto Serif KR', serif;
+  font-size: 2rem; font-weight: 700; color: var(--txt); margin-bottom: 0.5rem;
+}
+.intro-hero p { font-size: 13px; color: var(--muted); line-height: 1.75; }
+.lang-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 1.5rem 0; }
+.btn-lang {
+  padding: 1.1rem; border: none; border-radius: 10px;
+  font-family: 'Noto Sans KR', sans-serif;
+  font-size: 18px; font-weight: 700; color: white;
+  cursor: pointer; transition: opacity .18s, transform .14s;
+}
+.btn-lang:hover { opacity: 0.87; transform: translateY(-2px); }
+.btn-lang:active { transform: translateY(0); }
+.btn-ko { background: #007BFF; }
+.btn-en { background: #E83E8C; }
+.footer-note { text-align: center; font-size: 11px; color: var(--muted); }
+
+/* progress */
+.progress-wrap { margin-bottom: 1.4rem; }
+.progress-meta { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+.progress-track { height: 3px; background: var(--surface2); border-radius: 99px; overflow: hidden; }
+.progress-fill { height: 100%; background: var(--accent); border-radius: 99px; transition: width .4s cubic-bezier(.4,0,.2,1); }
+
+/* question */
+.q-text {
+  font-size: 1.12rem; font-weight: 700; text-align: center;
+  color: var(--txt); margin-bottom: 1.3rem; line-height: 1.55; min-height: 3em;
+}
+.ab-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 1rem; }
+.btn-ab {
+  padding: 0.85rem 0.6rem; border: none; border-radius: 10px;
+  font-family: 'Noto Sans KR', sans-serif;
+  font-size: 13px; font-weight: 700; cursor: pointer;
+  line-height: 1.5; text-align: center;
+  transition: opacity .18s, transform .14s;
+  word-break: keep-all;
+}
+.btn-ab:hover { opacity: 0.83; transform: translateY(-1px); }
+.btn-a-style { background: #218838; color: white; }
+.btn-b-style { background: #FFC107; color: #212529; }
+
+/* dim chart */
+.dim-chart { margin: 0.5rem 0 1rem; }
+.dim-row { display: flex; align-items: center; gap: 8px; margin-bottom: 9px; }
+.dim-lbl { font-size: 13px; font-weight: 700; width: 20px; text-align: center; flex-shrink: 0; color: var(--txt); }
+.dim-track { flex: 1; height: 8px; background: var(--surface2); border-radius: 99px; position: relative; }
+.dim-center { position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%); width: 1px; height: 16px; background: var(--muted); opacity: 0.4; }
+.dim-dot {
+  position: absolute; top: 50%; transform: translate(-50%, -50%);
+  width: 14px; height: 14px; border-radius: 50%;
+  border: 2.5px solid; background: transparent; pointer-events: none;
+}
+
+/* nav */
+.nav-row { display: flex; gap: 8px; }
+.btn-nav {
+  flex: 1; padding: 0.6rem 0.4rem; border: 1px solid var(--border);
+  border-radius: 9px; background: none; color: var(--muted);
+  font-family: 'Noto Sans KR', sans-serif; font-size: 13px; font-weight: 500;
+  cursor: pointer; transition: all .18s;
+}
+.btn-nav:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+.btn-nav:disabled { opacity: 0.28; cursor: default; }
+.btn-skip-style { background: #17A2B8; color: white; border-color: #17A2B8; }
+.btn-skip-style:hover:not(:disabled) { opacity: 0.85; }
+.btn-exit-style  { background: #6C757D; color: white; border-color: #6C757D; }
+.btn-exit-style:hover:not(:disabled) { opacity: 0.85; }
+
+/* result */
+.result-header { text-align: center; margin-bottom: 1rem; }
+.result-title-lbl { font-size: 12px; color: var(--muted); margin-bottom: 4px; }
+
+/* mbti image */
+.mbti-img-wrap {
+  width: 100%; height: 180px;
+  display: flex; align-items: center; justify-content: center;
+  margin: 0.6rem 0 0.8rem;
+}
+.mbti-img-wrap img {
+  max-width: 100%; max-height: 180px;
+  object-fit: contain;
+  border-radius: 12px;
+}
+.mbti-img-wrap .img-placeholder {
+  width: 120px; height: 120px; border-radius: 50%;
+  background: var(--surface2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 3rem;
+}
+
+/* pair images */
+.pair-img-wrap {
+  width: 100%; height: 80px;
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 6px;
+}
+.pair-img-wrap img {
+  max-width: 100%; max-height: 80px;
+  object-fit: contain; border-radius: 8px;
+}
+.pair-img-wrap .img-placeholder {
+  width: 60px; height: 60px; border-radius: 50%;
+  background: var(--bg);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.8rem;
+}
+.result-mbti {
+  font-family: 'Noto Serif KR', serif;
+  font-size: 3rem; font-weight: 700; letter-spacing: .1em;
+  color: var(--accent); line-height: 1.1;
+}
+.result-role { font-size: 1rem; font-weight: 500; color: var(--txt); margin-top: 4px; }
+.result-meta { text-align: center; font-size: 13px; color: var(--muted); margin: 2px 0; }
+.result-meta strong { color: var(--txt); }
+
+.pair-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 0.9rem 0; }
+.pair-card { background: var(--surface2); border-radius: 10px; padding: 0.8rem 0.5rem; text-align: center; }
+.pair-hdr { font-size: 12px; font-weight: 700; margin-bottom: 6px; }
+.pair-hdr.best { color: #218838; }
+.pair-hdr.worst { color: #DC3545; }
+.pair-type { font-size: 1.6rem; font-weight: 700; color: var(--txt); }
+
+.result-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; margin-top: 1rem; }
+.btn-result {
+  padding: 0.7rem; border: none; border-radius: 9px;
+  font-family: 'Noto Sans KR', sans-serif;
+  font-size: 13px; font-weight: 700; color: white; cursor: pointer;
+  transition: opacity .18s, transform .14s;
+}
+.btn-result:hover { opacity: 0.85; transform: translateY(-1px); }
+.btn-result.link  { background: #007BFF; }
+.btn-result.retry { background: #E83E8C; }
+.btn-result.exit  { background: #6C757D; grid-column: 1 / -1; }
+
+@media (max-width: 460px) {
+  .screen { padding: 1.4rem 1.1rem 1.3rem; }
+  .ab-grid { gap: 9px; }
+  .result-mbti { font-size: 2.4rem; }
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="card">
+    <div class="topbar">
+      <span class="topbar-title">Engineering MBTI</span>
+      <button class="theme-btn" id="themeBtn" onclick="toggleTheme()">🌙</button>
+    </div>
+
+    <!-- INTRO -->
+    <div class="screen active" id="screen-intro">
+      <div class="intro-hero">
+        <h1>Engineering MBTI</h1>
+        <p>12개의 질문으로 나의 엔지니어링 유형을 찾아보세요.<br>16가지 MATLAB/Simulink 역할 유형 중 당신은?</p>
+      </div>
+      <div class="lang-grid">
+        <button class="btn-lang btn-ko" onclick="startQuiz('ko')">한국어</button>
+        <button class="btn-lang btn-en" onclick="startQuiz('en')">English</button>
+      </div>
+      <div class="footer-note">Design by MATLAB App Designer</div>
+    </div>
+
+    <!-- QUIZ -->
+    <div class="screen" id="screen-quiz">
+      <div class="progress-wrap">
+        <div class="progress-meta">
+          <span id="dim-label"></span>
+          <span id="q-counter"></span>
+        </div>
+        <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
+      </div>
+      <div class="q-text" id="q-text"></div>
+      <div class="ab-grid">
+        <button class="btn-ab btn-a-style" id="btn-a" onclick="recordAnswer('A')"></button>
+        <button class="btn-ab btn-b-style" id="btn-b" onclick="recordAnswer('B')"></button>
+      </div>
+      <div class="dim-chart" id="dim-chart"></div>
+      <div class="nav-row">
+        <button class="btn-nav" id="btn-back" onclick="goBack()">← <span id="txt-back">이전</span></button>
+        <button class="btn-nav btn-skip-style" onclick="skipQuestion()"><span id="txt-skip">건너뛰기</span></button>
+        <button class="btn-nav btn-exit-style" onclick="exitApp()"><span id="txt-exit-q">종료</span></button>
+      </div>
+    </div>
+
+    <!-- RESULT -->
+    <div class="screen" id="screen-result">
+      <div class="result-header">
+        <div class="result-title-lbl" id="result-title-lbl"></div>
+        <div class="result-mbti" id="result-mbti"></div>
+        <div class="result-role" id="result-role"></div>
+      </div>
+      <div class="mbti-img-wrap" id="main-img-wrap"></div>
+      <div class="result-meta" id="result-env"></div>
+      <div class="result-meta" id="result-tool"></div>
+      <div class="dim-chart" id="dim-chart-result"></div>
+      <div class="pair-grid">
+        <div class="pair-card">
+          <div class="pair-hdr best" id="lbl-best-hdr"></div>
+          <div class="pair-img-wrap" id="best-img-wrap"></div>
+          <div class="pair-type" id="result-best"></div>
+        </div>
+        <div class="pair-card">
+          <div class="pair-hdr worst" id="lbl-worst-hdr"></div>
+          <div class="pair-img-wrap" id="worst-img-wrap"></div>
+          <div class="pair-type" id="result-worst"></div>
+        </div>
+      </div>
+      <div class="result-actions">
+        <button class="btn-result link"  id="btn-link"  onclick="window.open('https://www.mathworks.com/products.html','_blank')"></button>
+        <button class="btn-result retry" id="btn-retry" onclick="retryQuiz()"></button>
+        <button class="btn-result exit"  id="btn-exit-r" onclick="exitApp()"></button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── 질문 데이터 (MATLAB 코드 그대로) ─────────────────────────────
+const QUESTIONS = [
+  { ko:'모델링 시작 접근법은?',        en:'Starting modeling?',
+    Ako:'수식/알고리즘 작성',          Aen:'Write equations/algo',
+    Bko:'물리적 컴포넌트 배치',        Ben:'Place physical components',  dim:'TF' },
+  { ko:'프로젝트 진행 방식은?',        en:'Project workflow?',
+    Ako:'유연한 애자일/프로토타이핑',  Aen:'Agile/Prototyping',
+    Bko:'철저한 요구사항/V-모델',      Ben:'Requirements/V-Model',       dim:'JP' },
+  { ko:'선호하는 개발 범위는?',        en:'Dev scope preference?',
+    Ako:'전체 시스템 아키텍처',        Aen:'System Architecture',
+    Bko:'핵심 알고리즘 상세 구현',     Ben:'Core Algorithm Detail',      dim:'EI' },
+  { ko:'데이터 활용 방식은?',          en:'Data usage?',
+    Ako:'AI 학습 및 패턴 인식',        Aen:'AI Training/Patterns',
+    Bko:'신호 처리 및 필터링',         Ben:'Signal Processing',          dim:'NS' },
+  { ko:'시뮬레이션의 주 목적은?',      en:'Simulation goal?',
+    Ako:'논리 검증 및 최적화',         Aen:'Logic Verification',
+    Bko:'실제 거동/현상 재현',         Ben:'Physical Behavior',          dim:'TF' },
+  { ko:'코드 생성(C/C++)의 용도는?',   en:'Code generation use?',
+    Ako:'빠른 기능 확인',              Aen:'Quick Check',
+    Bko:'양산/인증용 탑재',            Ben:'Production/Safety',          dim:'JP' },
+  { ko:'외부 시스템과의 연동은?',      en:'External interface?',
+    Ako:'ROS/DDS 등 통신 통합',        Aen:'ROS/DDS Integration',
+    Bko:'단독 모듈 동작',              Ben:'Standalone Module',          dim:'EI' },
+  { ko:'제어기 설계 스타일은?',        en:'Controller design?',
+    Ako:'강화학습/예측 제어',          Aen:'RL/MPC',
+    Bko:'PID/고전 제어',               Ben:'PID/Classical',              dim:'NS' },
+  { ko:'디버깅 할 때 주로 보는 것은?', en:'Debugging focus?',
+    Ako:'변수 값/데이터 타입',         Aen:'Variables/Data Types',
+    Bko:'신호 흐름/블록 연결',         Ben:'Signal Flow/Connections',    dim:'TF' },
+  { ko:'소프트웨어 검증 수준은?',      en:'Verification level?',
+    Ako:'기능 동작 여부 확인',         Aen:'Functional Check',
+    Bko:'커버리지/정적 분석',          Ben:'Coverage/Static Analysis',   dim:'JP' },
+  { ko:'협업 시 선호하는 형태는?',     en:'Collaboration style?',
+    Ako:'모델 기반 시스템 통합',       Aen:'Model-Based Integration',
+    Bko:'함수/라이브러리 배포',        Ben:'Function/Lib Delivery',      dim:'EI' },
+  { ko:'가장 흥미로운 분야는?',        en:'Most interesting field?',
+    Ako:'자율주행/인지/판단',          Aen:'Autonomous/Perception',
+    Bko:'모터/구동/전력',              Ben:'Motor/Actuation/Power',      dim:'NS' },
+];
+
+// 차원별 질문 인덱스 (0-based): TF=[0,4,8], JP=[1,5,9], EI=[2,6,10], NS=[3,7,11]
+const DIM_IDX = { TF:[0,4,8], JP:[1,5,9], EI:[2,6,10], NS:[3,7,11] };
+
+// 결과 데이터 (MATLAB switch-case 그대로)
+const RESULTS = {
+  ENTP:{ ko:'머신러닝/딥러닝 어플리케이션 개발', en:'ML/DL App Developer',                    base:'MATLAB',          tool:'Deep Learning Toolbox',                best:'INFJ', worst:'ISFJ' },
+  ESTP:{ ko:'시스템 엔지니어링 (아키텍처 설계)',  en:'Systems Engineering (Architecture)',     base:'MATLAB',          tool:'System Composer',                      best:'ISFJ', worst:'INFP' },
+  INTP:{ ko:'데이터 분석',                         en:'Data Analyst',                           base:'MATLAB',          tool:'Statistics & Machine Learning Toolbox', best:'ENTJ', worst:'ESFJ' },
+  ISTP:{ ko:'순수한 매트랩 프로그래머',            en:'Pure MATLAB Programmer',                 base:'MATLAB',          tool:'MATLAB Coder',                         best:'ESFJ', worst:'ENFP' },
+  ENTJ:{ ko:'자율 주행/ADAS 어플리케이션 개발',   en:'Autonomous Driving / ADAS Developer',   base:'MATLAB',          tool:'Automated Driving Toolbox',            best:'INTP', worst:'ISFP' },
+  ESTJ:{ ko:'소프트웨어 엔지니어링 (검증 작업)',  en:'Software Engineering (Verification)',    base:'MATLAB/Simulink', tool:'Simulink Test & Check',                best:'ISTP', worst:'INFP' },
+  INTJ:{ ko:'주파수 등 신호처리 및 분석',          en:'Signal Processing & Analysis',           base:'MATLAB',          tool:'Signal Processing Toolbox',            best:'ENFP', worst:'ESFP' },
+  ISTJ:{ ko:'제어 알고리즘 개발자 (매트랩)',       en:'Control Algorithm Developer (MATLAB)',   base:'MATLAB',          tool:'Control System Toolbox',               best:'ESFP', worst:'ENFJ' },
+  ENFP:{ ko:'ROS, DDS, Adaptive AUTOSAR 플랫폼',  en:'ROS / DDS / AUTOSAR Platform',          base:'Simulink',        tool:'ROS Toolbox / AUTOSAR Blockset',       best:'INTJ', worst:'ISTJ' },
+  ESFP:{ ko:'ASPICE, 기능 안전 소프트웨어 개발',  en:'ASPICE & Functional Safety',            base:'Simulink',        tool:'Requirements Toolbox',                 best:'ISTJ', worst:'INTJ' },
+  INFP:{ ko:'자동 코드 생성',                      en:'Auto Code Generation',                   base:'Simulink',        tool:'Embedded Coder',                       best:'ENFJ', worst:'ESTJ' },
+  ISFP:{ ko:'매트랩/시뮬링크 초보자',              en:'MATLAB / Simulink Beginner',             base:'Simulink',        tool:'Simulink Onramp',                      best:'ESFJ', worst:'ENTJ' },
+  ENFJ:{ ko:'로봇 등 메카닉 구현',                 en:'Robotics & Mechanical Implementation',  base:'Simulink',        tool:'Robotics System Toolbox',              best:'INFP', worst:'ISTJ' },
+  ESFJ:{ ko:'플랜트 모델링 및 시뮬레이션',        en:'Plant Modeling & Simulation',           base:'Simulink',        tool:'Simscape',                             best:'ISFP', worst:'INTP' },
+  INFJ:{ ko:'제어 알고리즘 개발자 (시뮬링크)',    en:'Control Algorithm Developer (Simulink)',base:'Simulink',        tool:'Simulink Control Design',              best:'ENTP', worst:'ESTP' },
+  ISFJ:{ ko:'모터 제어 등 전동화',                 en:'Motor Control & Electrification',        base:'Simulink',        tool:'Motor Control Blockset',               best:'ESTP', worst:'ENTP' },
+};
+
+// 차트 점 색상 (MATLAB qColors 배열과 동일 순서)
+const Q_COLORS = [
+  '#DC3545','#3490BD','#EA7B1F','#8C2EC9',
+  '#2CB85A','#D9BF0E','#808080','#1A9E9E',
+  '#ED1F8D','#4545EC','#1BD1C7','#EE9428',
+];
+
+// 차트 행 정의 (MATLAB buildDimChart와 동일)
+// EI: A→E(오른쪽), NS: A→N(왼쪽), TF: A→T(왼쪽), JP: A→P(오른쪽)
+const DIM_ROWS = [
+  { idxs: DIM_IDX.EI, L:'I', R:'E', aRight:true  },
+  { idxs: DIM_IDX.NS, L:'N', R:'S', aRight:false },
+  { idxs: DIM_IDX.TF, L:'T', R:'F', aRight:false },
+  { idxs: DIM_IDX.JP, L:'J', R:'P', aRight:true  },
+];
+const LX = [22,36,13];  // leftXPos
+const RX = [78,64,87];  // rightXPos
+
+// ── 상태 ──────────────────────────────────────────────────────────
+let lang = 'ko', qIdx = 0, answers = [], dark = false;
+
+// ── 테마 ──────────────────────────────────────────────────────────
+function toggleTheme() {
+  dark = !dark;
+  document.documentElement.setAttribute('data-theme', dark ? 'dark' : '');
+  document.getElementById('themeBtn').textContent = dark ? '☀️' : '🌙';
+}
+
+// ── 화면 전환 ─────────────────────────────────────────────────────
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  const el = document.getElementById('screen-' + id);
+  el.classList.remove('active');
+  void el.offsetWidth;
+  el.classList.add('active');
+}
+
+// ── 퀴즈 시작/재시작 ──────────────────────────────────────────────
+function startQuiz(l) {
+  lang = l; qIdx = 0; answers = [];
+  showScreen('quiz');
+  render();
+}
+function retryQuiz() { startQuiz(lang); }
+function exitApp()   { showScreen('intro'); }
+
+// ── 질문 렌더 ─────────────────────────────────────────────────────
+const DIM_NAMES = { TF:'T / F', JP:'J / P', EI:'E / I', NS:'N / S' };
+const isKo = () => lang === 'ko';
+
+function render() {
+  const q = QUESTIONS[qIdx];
+  document.getElementById('dim-label').textContent    = DIM_NAMES[q.dim];
+  document.getElementById('q-counter').textContent    = `${qIdx+1} / ${QUESTIONS.length}`;
+  document.getElementById('progress-fill').style.width= `${(qIdx+1)/QUESTIONS.length*100}%`;
+  document.getElementById('q-text').textContent       = isKo() ? q.ko  : q.en;
+  document.getElementById('btn-a').textContent        = isKo() ? q.Ako : q.Aen;
+  document.getElementById('btn-b').textContent        = isKo() ? q.Bko : q.Ben;
+  document.getElementById('btn-back').disabled        = qIdx === 0;
+  document.getElementById('txt-back').textContent     = isKo() ? '이전'     : 'Back';
+  document.getElementById('txt-skip').textContent     = isKo() ? '건너뛰기' : 'Skip';
+  document.getElementById('txt-exit-q').textContent   = isKo() ? '종료'     : 'Exit';
+  renderChart('dim-chart', answers);
+}
+
+// ── 답변 ──────────────────────────────────────────────────────────
+function recordAnswer(ch) {
+  answers[qIdx] = ch;
+  if (qIdx < QUESTIONS.length - 1) { qIdx++; render(); }
+  else showResult();
+}
+function goBack()       { if (qIdx > 0) { qIdx--; render(); } }
+function skipQuestion() { recordAnswer('X'); }
+
+// ── 차원 분포 차트 ────────────────────────────────────────────────
+function renderChart(id, ans) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  let html = '';
+  DIM_ROWS.forEach(row => {
+    let lc = 0, rc = 0, dots = '';
+    row.idxs.forEach(qi => {
+      const a = ans[qi];
+      if (!a || a === 'X') return;
+      const goR = (a==='A' && row.aRight) || (a==='B' && !row.aRight);
+      const x   = goR ? RX[Math.min(rc++,2)] : LX[Math.min(lc++,2)];
+      dots += `<div class="dim-dot" style="left:${x}%;border-color:${Q_COLORS[qi]};"></div>`;
+    });
+    html += `<div class="dim-row">
+      <span class="dim-lbl">${row.L}</span>
+      <div class="dim-track">
+        <div class="dim-center"></div>
+        ${dots}
+      </div>
+      <span class="dim-lbl">${row.R}</span>
+    </div>`;
+  });
+  el.innerHTML = html;
+}
+
+// ── 결과 계산 ─────────────────────────────────────────────────────
+function calcDim(idxs) {
+  const v = idxs.map(i=>answers[i]).filter(a=>a&&a!=='X');
+  if (!v.length) return null;
+  return v.filter(a=>a==='A').length >= v.length / 2;
+}
+
+// MBTI 이미지를 지정 컨테이너에 렌더링
+// 이미지 경로: images/mbti/<TYPE>.png  (GitHub 레포에 이미지 파일이 함께 있어야 함)
+// 이미지 로드 실패 시 MBTI 타입 텍스트로 대체 표시
+function setMbtiImg(wrapperId, mbtiType, large) {
+  const wrap = document.getElementById(wrapperId);
+  if (!wrap) return;
+  const img = document.createElement('img');
+  img.alt = mbtiType;
+  img.src = `images/mbti/${mbtiType}.png`;
+  img.onerror = function() {
+    // 이미지 파일 없을 때 placeholder
+    wrap.innerHTML = `<div class="img-placeholder">${mbtiType}</div>`;
+  };
+  wrap.innerHTML = '';
+  wrap.appendChild(img);
+}
+
+function showResult() {
+  // 충분한 답변 여부 확인
+  const ok = [DIM_IDX.TF,DIM_IDX.JP,DIM_IDX.EI,DIM_IDX.NS].every(
+    idxs => idxs.some(i => answers[i] && answers[i] !== 'X')
+  );
+  if (!ok) {
+    alert(isKo()
+      ? '결과 계산에 필요한 답변이 부족합니다. 처음부터 다시 시작합니다.'
+      : 'Insufficient answers. Restarting...');
+    startQuiz(lang); return;
+  }
+
+  // MATLAB 판정 로직 동일:
+  // letterT_F: F기본, A많으면T  → A쪽=T(왼쪽 = 'T') → isA=true → T
+  // letterJ_P: J기본, A많으면P  → A쪽=P
+  // letterE_I: I기본, A많으면E  → A쪽=E
+  // letterN_S: S기본, A많으면N  → A쪽=N
+  const mbti = [
+    calcDim(DIM_IDX.EI) ? 'E':'I',
+    calcDim(DIM_IDX.NS) ? 'N':'S',
+    calcDim(DIM_IDX.TF) ? 'T':'F',
+    calcDim(DIM_IDX.JP) ? 'P':'J',
+  ].join('');
+
+  const r = RESULTS[mbti] || { ko:'Unknown', en:'Unknown', base:'N/A', tool:'N/A', best:'-', worst:'-' };
+  const ko = isKo();
+
+  document.getElementById('result-title-lbl').textContent = ko ? '당신의 엔지니어링 MBTI는:' : 'Your Engineering MBTI:';
+  document.getElementById('result-mbti').textContent      = mbti;
+  document.getElementById('result-role').textContent      = ko ? r.ko : r.en;
+  document.getElementById('result-env').innerHTML         = `<strong>${ko?'주 사용 환경':'Environment'}:</strong> ${r.base}`;
+  document.getElementById('result-tool').innerHTML        = `<strong>${ko?'추천 툴박스':'Recommended Tool'}:</strong> ${r.tool}`;
+  document.getElementById('lbl-best-hdr').textContent     = ko ? '환상의 짝꿍' : 'Best Match';
+  document.getElementById('lbl-worst-hdr').textContent    = ko ? '환장의 짝꿍' : 'Worst Match';
+  document.getElementById('result-best').textContent      = r.best;
+  document.getElementById('result-worst').textContent     = r.worst;
+  document.getElementById('btn-link').textContent         = ko ? '제품 보기'  : 'Products';
+  document.getElementById('btn-retry').textContent        = ko ? '다시 하기'  : 'Retry';
+  document.getElementById('btn-exit-r').textContent       = ko ? '종료'       : 'Exit';
+
+  // 이미지 렌더링
+  setMbtiImg('main-img-wrap', mbti, true);
+  setMbtiImg('best-img-wrap',  r.best, false);
+  setMbtiImg('worst-img-wrap', r.worst, false);
+
+  renderChart('dim-chart-result', answers);
+  showScreen('result');
+}
+</script>
+</body>
+</html>
