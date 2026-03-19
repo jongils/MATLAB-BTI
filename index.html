@@ -126,6 +126,19 @@ html, body { min-height: 100vh; background: var(--bg); color: var(--txt); font-f
   border: 2.5px solid; background: transparent; pointer-events: none;
 }
 
+/* question image */
+.q-img-wrap {
+  width: 100%; min-height: 0; max-height: 140px;
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 0 0.5rem; overflow: hidden;
+}
+.q-img-wrap img {
+  max-width: 100%; max-height: 140px;
+  object-fit: contain; border-radius: 10px;
+  display: none;
+}
+.q-img-wrap img.loaded { display: block; }
+
 /* nav */
 .nav-row { display: flex; gap: 8px; }
 .btn-nav {
@@ -205,7 +218,8 @@ html, body { min-height: 100vh; background: var(--bg); color: var(--txt); font-f
 .btn-result:hover { opacity: 0.85; transform: translateY(-1px); }
 .btn-result.link  { background: #007BFF; }
 .btn-result.retry { background: #E83E8C; }
-.btn-result.exit  { background: #6C757D; grid-column: 1 / -1; }
+.btn-result.save  { background: #007BFF; }
+.btn-result.exit  { background: #6C757D; }
 
 @media (max-width: 460px) {
   .screen { padding: 1.4rem 1.1rem 1.3rem; }
@@ -245,6 +259,7 @@ html, body { min-height: 100vh; background: var(--bg); color: var(--txt); font-f
         <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
       </div>
       <div class="q-text" id="q-text"></div>
+      <div class="q-img-wrap" id="q-img-wrap"></div>
       <div class="ab-grid">
         <button class="btn-ab btn-a-style" id="btn-a" onclick="recordAnswer('A')"></button>
         <button class="btn-ab btn-b-style" id="btn-b" onclick="recordAnswer('B')"></button>
@@ -283,12 +298,14 @@ html, body { min-height: 100vh; background: var(--bg); color: var(--txt); font-f
       <div class="result-actions">
         <button class="btn-result link"  id="btn-link"  onclick="window.open('https://www.mathworks.com/products.html','_blank')"></button>
         <button class="btn-result retry" id="btn-retry" onclick="retryQuiz()"></button>
+        <button class="btn-result save"  id="btn-save-r" onclick="saveResultImage()"></button>
         <button class="btn-result exit"  id="btn-exit-r" onclick="exitApp()"></button>
       </div>
     </div>
   </div>
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script>
 // ── 질문 데이터 (MATLAB 코드 그대로) ─────────────────────────────
 const QUESTIONS = [
@@ -342,7 +359,7 @@ const RESULTS = {
   ENTJ:{ ko:'자율 주행/ADAS 어플리케이션 개발',   en:'Autonomous Driving / ADAS Developer',   base:'MATLAB',          tool:'Automated Driving Toolbox',            best:'INTP', worst:'ISFP' },
   ESTJ:{ ko:'소프트웨어 엔지니어링 (검증 작업)',  en:'Software Engineering (Verification)',    base:'MATLAB/Simulink', tool:'Simulink Test & Check',                best:'ISTP', worst:'INFP' },
   INTJ:{ ko:'주파수 등 신호처리 및 분석',          en:'Signal Processing & Analysis',           base:'MATLAB',          tool:'Signal Processing Toolbox',            best:'ENFP', worst:'ESFP' },
-  ISTJ:{ ko:'제어 알고리즘 개발자 (매트랩)',       en:'Control Algorithm Developer (MATLAB)',   base:'MATLAB',          tool:'Control System Toolbox',               best:'ESFP', worst:'ENFJ' },
+  ISTJ:{ ko:'제어 알고리즘 개발자 (매트랩 프로그래밍)', en:'Control Algorithm Developer (MATLAB)',   base:'MATLAB',          tool:'Control System Toolbox',               best:'ESFP', worst:'ENFJ' },
   ENFP:{ ko:'ROS, DDS, Adaptive AUTOSAR 플랫폼',  en:'ROS / DDS / AUTOSAR Platform',          base:'Simulink',        tool:'ROS Toolbox / AUTOSAR Blockset',       best:'INTJ', worst:'ISTJ' },
   ESFP:{ ko:'ASPICE, 기능 안전 소프트웨어 개발',  en:'ASPICE & Functional Safety',            base:'Simulink',        tool:'Requirements Toolbox',                 best:'ISTJ', worst:'INTJ' },
   INFP:{ ko:'자동 코드 생성',                      en:'Auto Code Generation',                   base:'Simulink',        tool:'Embedded Coder',                       best:'ENFJ', worst:'ESTJ' },
@@ -372,7 +389,7 @@ const LX = [22,36,13];  // leftXPos
 const RX = [78,64,87];  // rightXPos
 
 // ── 상태 ──────────────────────────────────────────────────────────
-let lang = 'ko', qIdx = 0, answers = [], dark = false;
+let lang = 'ko', qIdx = 0, answers = [], dark = false, currentMbti = '';
 
 // ── 테마 ──────────────────────────────────────────────────────────
 function toggleTheme() {
@@ -415,6 +432,15 @@ function render() {
   document.getElementById('txt-back').textContent     = isKo() ? '이전'     : 'Back';
   document.getElementById('txt-skip').textContent     = isKo() ? '건너뛰기' : 'Skip';
   document.getElementById('txt-exit-q').textContent   = isKo() ? '종료'     : 'Exit';
+  // 질문 이미지 (images/questions/Q<n>.png)
+  const imgWrap = document.getElementById('q-img-wrap');
+  imgWrap.innerHTML = '';
+  const qImg = document.createElement('img');
+  qImg.alt = '';
+  qImg.src = `images/questions/Q${qIdx + 1}.png`;
+  qImg.onload  = function() { this.classList.add('loaded'); };
+  qImg.onerror = function() { imgWrap.innerHTML = ''; };
+  imgWrap.appendChild(qImg);
   renderChart('dim-chart', answers);
 }
 
@@ -501,6 +527,7 @@ function showResult() {
     calcDim(DIM_IDX.JP) ? 'P':'J',
   ].join('');
 
+  currentMbti = mbti;
   const r = RESULTS[mbti] || { ko:'Unknown', en:'Unknown', base:'N/A', tool:'N/A', best:'-', worst:'-' };
   const ko = isKo();
 
@@ -515,6 +542,7 @@ function showResult() {
   document.getElementById('result-worst').textContent     = r.worst;
   document.getElementById('btn-link').textContent         = ko ? '제품 보기'  : 'Products';
   document.getElementById('btn-retry').textContent        = ko ? '다시 하기'  : 'Retry';
+  document.getElementById('btn-save-r').textContent       = ko ? '결과 저장'  : 'Save Result';
   document.getElementById('btn-exit-r').textContent       = ko ? '종료'       : 'Exit';
 
   // 이미지 렌더링
@@ -524,6 +552,26 @@ function showResult() {
 
   renderChart('dim-chart-result', answers);
   showScreen('result');
+}
+// ── 결과 저장 ─────────────────────────────────────────────────────
+function saveResultImage() {
+  const el = document.getElementById('screen-result');
+  if (typeof html2canvas === 'undefined') {
+    window.print();
+    return;
+  }
+  const bg = getComputedStyle(document.documentElement)
+    .getPropertyValue('--surface').trim() || '#ffffff';
+  html2canvas(el, { backgroundColor: bg, useCORS: true, scale: 2 })
+    .then(canvas => {
+      const a = document.createElement('a');
+      a.download = `MBTI_${currentMbti}.png`;
+      a.href = canvas.toDataURL('image/png');
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    })
+    .catch(() => window.print());
 }
 </script>
 </body>
