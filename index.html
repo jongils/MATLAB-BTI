@@ -556,13 +556,30 @@ function showResult() {
 // ── 결과 저장 ─────────────────────────────────────────────────────
 function saveResultImage() {
   const el = document.getElementById('screen-result');
+  const actions = el.querySelector('.result-actions');
   if (typeof html2canvas === 'undefined') {
     window.print();
     return;
   }
+  // 저장 중 버튼 숨기기
+  actions.style.display = 'none';
+
   const bg = getComputedStyle(document.documentElement)
     .getPropertyValue('--surface').trim() || '#ffffff';
-  html2canvas(el, { backgroundColor: bg, useCORS: true, scale: 2 })
+  html2canvas(el, {
+    backgroundColor: bg,
+    useCORS: true,
+    scale: 2,
+    onclone: (doc) => {
+      const cloned = doc.getElementById('screen-result');
+      if (cloned) {
+        cloned.style.animation = 'none';
+        cloned.style.opacity = '1';
+        cloned.style.background = bg;
+        cloned.style.padding = '2rem';
+      }
+    }
+  })
     .then(canvas => {
       const a = document.createElement('a');
       a.download = `MBTI_${currentMbti}.png`;
@@ -571,7 +588,11 @@ function saveResultImage() {
       a.click();
       document.body.removeChild(a);
     })
-    .catch(() => window.print());
+    .catch(() => window.print())
+    .finally(() => {
+      // 버튼 다시 표시
+      actions.style.display = '';
+    });
 }
 </script>
 </body>
