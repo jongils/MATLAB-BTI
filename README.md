@@ -1,4 +1,4 @@
-# MBTI 엔지니어 성격 유형 퀴즈 | MBTI Engineering Personality Quiz
+# MBTI 엔지니어 성격 유형 퀴즈
 
 <p align="center">
   <img src="images/qrcode.png" alt="QR Code" width="160"/>
@@ -123,7 +123,7 @@ MBTI/
 > **참고:** MBTI 아이콘(`images/mbti/ENTP.png` 등) 및 질문 이미지(`images/questions/Q1.png`–`Q12.png`)는 저장소에 포함되어 있지 않습니다. MBTI 아이콘이 없으면 순서대로 대체됩니다: `images/matlab_logo.png` → MATLAB 설치 기본 아이콘.
 
 ---
-
+# MBTI Engineering Personality Quiz
 ---
 
 ## 🇺🇸 English Version
