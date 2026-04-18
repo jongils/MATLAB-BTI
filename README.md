@@ -1,121 +1,10 @@
-# MBTI Engineering Personality Quiz | MBTI 엔지니어 성격 유형 퀴즈
+# MBTI 엔지니어 성격 유형 퀴즈 | MBTI Engineering Personality Quiz
 
----
-
-## 🇺🇸 English Version
-
-### Table of Contents
-- [Overview](#overview)
-- [Features](#features)
-- [MBTI Types & Engineering Roles](#mbti-types--engineering-roles)
-- [How It Works](#how-it-works)
-- [Requirements](#requirements)
-- [Getting Started](#getting-started)
-- [Project Structure](#project-structure)
-
----
-
-### Overview
-
-This is an interactive **MBTI personality quiz application** built with **MATLAB App Designer**, tailored specifically for engineers. It presents 12 engineering-focused questions to determine the user's MBTI type and maps each of the 16 personality types to a specific **engineering role** along with recommended **MathWorks toolboxes**.
-
----
-
-### Features
-
-- 🧠 **12 engineering-specific quiz questions** covering modeling, simulation, verification, robotics, autonomous driving, and more
-- 🌐 **Bilingual support**: Korean (한국어) and English
-- 🌙 **Light / Dark theme** toggle
-- 📊 **16 MBTI personality types** each mapped to a unique engineering role and recommended toolbox
-- 🔁 **Navigation controls**: Back, Skip, and Exit buttons
-- 🖼️ **Visual result display** with role description, toolbox recommendation, and best/worst compatibility
-- 💾 **Export result** as a PNG image
-- 🔗 **Direct link** to MathWorks product pages
-
----
-
-### MBTI Types & Engineering Roles
-
-| MBTI | Engineering Role | Base Environment | Recommended Toolbox | Best Match | Worst Match |
-|------|-----------------|-----------------|---------------------|-----------|------------|
-| ENTP | ML/DL App Developer | MATLAB | Deep Learning Toolbox | INFJ | ISFJ |
-| ESTP | Systems Engineering (Architecture) | MATLAB | System Composer | ISFJ | INFP |
-| INTP | Data Analyst | MATLAB | Statistics & ML Toolbox | ENTJ | ESFJ |
-| ISTP | Pure MATLAB Programmer | MATLAB | MATLAB Coder | ESFJ | ENFP |
-| ENTJ | Autonomous Driving / ADAS | MATLAB | Automated Driving Toolbox | INTP | ISFP |
-| ESTJ | Software Engineering (Verification) | MATLAB / Simulink | Simulink Test & Check | ISTP | INFP |
-| INTJ | Signal Processing & Analysis | MATLAB | Signal Processing Toolbox | ENFP | ESFP |
-| ISTJ | Control Algorithm Developer (MATLAB) | MATLAB | Control System Toolbox | ESFP | ENFJ |
-| ENFP | ROS / DDS / AUTOSAR Platform | Simulink | ROS Toolbox / AUTOSAR Blockset | INTJ | ISTJ |
-| ESFP | ASPICE & Functional Safety | Simulink | Requirements Toolbox | ISTJ | INTJ |
-| INFP | Auto Code Generation | Simulink | Embedded Coder | ENFJ | ESTJ |
-| ISFP | MATLAB / Simulink Beginner | Simulink | Simulink Onramp | ESFJ | ENTJ |
-| ENFJ | Robotics & Mechanical Implementation | Simulink | Robotics System Toolbox | INFP | ISTJ |
-| ESFJ | Plant Modeling & Simulation | Simulink | Simscape | ISFP | INTP |
-| INFJ | Control Algorithm Developer (Simulink) | Simulink | Simulink Control Design | ENTP | ESTP |
-| ISFJ | Motor Control & Electrification | Simulink | Motor Control Blockset | ESTP | ENTP |
-
----
-
-### How It Works
-
-1. **Launch** the app in MATLAB — the Start screen appears with language selection.
-2. **Select a language**: Korean or English.
-3. **Answer 12 questions** by clicking **A** or **B** (or **Skip** to leave a question blank).
-4. Use the **Back** button to revisit previous answers.
-5. After the last question, the app calculates your **MBTI type** based on 4 dimensions:
-   - **T/F** (Thinking / Feeling): Questions 1, 5, 9
-   - **J/P** (Judging / Perceiving): Questions 2, 6, 10
-   - **E/I** (Extroversion / Introversion): Questions 3, 7, 11
-   - **N/S** (iNtuition / Sensing): Questions 4, 8, 12
-6. The **Result screen** shows your MBTI type, matched engineering role, recommended toolbox, and compatibility.
-7. You can **save your result** as a PNG, **explore the product page**, or **retry** the quiz.
-
----
-
-### Requirements
-
-- **MATLAB R2023a** or later
-- MATLAB **App Designer** (included with MATLAB)
-- *(Optional)* MathWorks toolboxes listed in the results table for full product exploration
-
----
-
-### Getting Started
-
-```matlab
-% 1. Open MATLAB
-% 2. Navigate to the project directory
-cd /path/to/MBTI
-
-% 3. Run the app
-MBTIApp
-```
-
-Alternatively, open `MBTIApp.m` in **MATLAB App Designer** and click **Run**.
-
----
-
-### Project Structure
-
-```
-MBTI/
-├── MBTIApp.m              # Main MATLAB App Designer application
-├── images/
-│   ├── mbti/              # MBTI type icons (ENTP.png ~ ISFJ.png) — add icons here
-│   ├── questions/         # Question illustration images (Q1.png ~ Q12.png)
-│   └── matlab_logo.png    # (Optional) Custom fallback logo when MBTI icon is missing
-├── .devcontainer/
-│   └── devcontainer.json  # Dev container configuration for cloud development
-├── .vscode/
-│   ├── launch.json        # VS Code debugger configuration
-│   └── settings.json      # VS Code workspace settings
-└── README.md              # This file
-```
-
-> **Note:** MBTI icon images (`images/mbti/ENTP.png`, etc.) and question images (`images/questions/Q1.png`–`Q12.png`) are not included in this repository. When an MBTI icon is missing, the app falls back in order: `images/matlab_logo.png` → MATLAB built-in icon.
-
----
+<p align="center">
+  <img src="images/qrcode.png" alt="QR Code" width="160"/>
+  <br/>
+  <em>QR 코드를 스캔하여 바로 접속하세요 / Scan to open the app</em>
+</p>
 
 ---
 
@@ -221,6 +110,7 @@ MBTI/
 ├── images/
 │   ├── mbti/              # MBTI 유형별 아이콘 (ENTP.png ~ ISFJ.png) — 여기에 추가
 │   ├── questions/         # 질문 삽화 이미지 (Q1.png ~ Q12.png)
+│   ├── qrcode.png         # 앱 접속 QR 코드
 │   └── matlab_logo.png    # (선택) MBTI 아이콘 없을 때 대체할 커스텀 로고
 ├── .devcontainer/
 │   └── devcontainer.json  # 클라우드 개발용 Dev Container 설정
@@ -231,3 +121,121 @@ MBTI/
 ```
 
 > **참고:** MBTI 아이콘(`images/mbti/ENTP.png` 등) 및 질문 이미지(`images/questions/Q1.png`–`Q12.png`)는 저장소에 포함되어 있지 않습니다. MBTI 아이콘이 없으면 순서대로 대체됩니다: `images/matlab_logo.png` → MATLAB 설치 기본 아이콘.
+
+---
+
+---
+
+## 🇺🇸 English Version
+
+### Table of Contents
+- [Overview](#overview)
+- [Features](#features)
+- [MBTI Types & Engineering Roles](#mbti-types--engineering-roles)
+- [How It Works](#how-it-works)
+- [Requirements](#requirements)
+- [Getting Started](#getting-started)
+- [Project Structure](#project-structure)
+
+---
+
+### Overview
+
+This is an interactive **MBTI personality quiz application** built with **MATLAB App Designer**, tailored specifically for engineers. It presents 12 engineering-focused questions to determine the user's MBTI type and maps each of the 16 personality types to a specific **engineering role** along with recommended **MathWorks toolboxes**.
+
+---
+
+### Features
+
+- 🧠 **12 engineering-specific quiz questions** covering modeling, simulation, verification, robotics, autonomous driving, and more
+- 🌐 **Bilingual support**: Korean (한국어) and English
+- 🌙 **Light / Dark theme** toggle
+- 📊 **16 MBTI personality types** each mapped to a unique engineering role and recommended toolbox
+- 🔁 **Navigation controls**: Back, Skip, and Exit buttons
+- 🖼️ **Visual result display** with role description, toolbox recommendation, and best/worst compatibility
+- 💾 **Export result** as a PNG image
+- 🔗 **Direct link** to MathWorks product pages
+
+---
+
+### MBTI Types & Engineering Roles
+
+| MBTI | Engineering Role | Base Environment | Recommended Toolbox | Best Match | Worst Match |
+|------|-----------------|-----------------|---------------------|-----------|------------|
+| ENTP | ML/DL App Developer | MATLAB | Deep Learning Toolbox | INFJ | ISFJ |
+| ESTP | Systems Engineering (Architecture) | MATLAB | System Composer | ISFJ | INFP |
+| INTP | Data Analyst | MATLAB | Statistics & ML Toolbox | ENTJ | ESFJ |
+| ISTP | Pure MATLAB Programmer | MATLAB | MATLAB Coder | ESFJ | ENFP |
+| ENTJ | Autonomous Driving / ADAS | MATLAB | Automated Driving Toolbox | INTP | ISFP |
+| ESTJ | Software Engineering (Verification) | MATLAB / Simulink | Simulink Test & Check | ISTP | INFP |
+| INTJ | Signal Processing & Analysis | MATLAB | Signal Processing Toolbox | ENFP | ESFP |
+| ISTJ | Control Algorithm Developer (MATLAB) | MATLAB | Control System Toolbox | ESFP | ENFJ |
+| ENFP | ROS / DDS / AUTOSAR Platform | Simulink | ROS Toolbox / AUTOSAR Blockset | INTJ | ISTJ |
+| ESFP | ASPICE & Functional Safety | Simulink | Requirements Toolbox | ISTJ | INTJ |
+| INFP | Auto Code Generation | Simulink | Embedded Coder | ENFJ | ESTJ |
+| ISFP | MATLAB / Simulink Beginner | Simulink | Simulink Onramp | ESFJ | ENTJ |
+| ENFJ | Robotics & Mechanical Implementation | Simulink | Robotics System Toolbox | INFP | ISTJ |
+| ESFJ | Plant Modeling & Simulation | Simulink | Simscape | ISFP | INTP |
+| INFJ | Control Algorithm Developer (Simulink) | Simulink | Simulink Control Design | ENTP | ESTP |
+| ISFJ | Motor Control & Electrification | Simulink | Motor Control Blockset | ESTP | ENTP |
+
+---
+
+### How It Works
+
+1. **Launch** the app in MATLAB — the Start screen appears with language selection.
+2. **Select a language**: Korean or English.
+3. **Answer 12 questions** by clicking **A** or **B** (or **Skip** to leave a question blank).
+4. Use the **Back** button to revisit previous answers.
+5. After the last question, the app calculates your **MBTI type** based on 4 dimensions:
+   - **T/F** (Thinking / Feeling): Questions 1, 5, 9
+   - **J/P** (Judging / Perceiving): Questions 2, 6, 10
+   - **E/I** (Extroversion / Introversion): Questions 3, 7, 11
+   - **N/S** (iNtuition / Sensing): Questions 4, 8, 12
+6. The **Result screen** shows your MBTI type, matched engineering role, recommended toolbox, and compatibility.
+7. You can **save your result** as a PNG, **explore the product page**, or **retry** the quiz.
+
+---
+
+### Requirements
+
+- **MATLAB R2023a** or later
+- MATLAB **App Designer** (included with MATLAB)
+- *(Optional)* MathWorks toolboxes listed in the results table for full product exploration
+
+---
+
+### Getting Started
+
+```matlab
+% 1. Open MATLAB
+% 2. Navigate to the project directory
+cd /path/to/MBTI
+
+% 3. Run the app
+MBTIApp
+```
+
+Alternatively, open `MBTIApp.m` in **MATLAB App Designer** and click **Run**.
+
+---
+
+### Project Structure
+
+```
+MBTI/
+├── MBTIApp.m              # Main MATLAB App Designer application
+├── images/
+│   ├── mbti/              # MBTI type icons (ENTP.png ~ ISFJ.png) — add icons here
+│   ├── questions/         # Question illustration images (Q1.png ~ Q12.png)
+│   ├── qrcode.png         # QR code for direct app access
+│   └── matlab_logo.png    # (Optional) Custom fallback logo when MBTI icon is missing
+├── .devcontainer/
+│   └── devcontainer.json  # Dev container configuration for cloud development
+├── .vscode/
+│   ├── launch.json        # VS Code debugger configuration
+│   └── settings.json      # VS Code workspace settings
+└── README.md              # This file
+```
+
+> **Note:** MBTI icon images (`images/mbti/ENTP.png`, etc.) and question images (`images/questions/Q1.png`–`Q12.png`) are not included in this repository. When an MBTI icon is missing, the app falls back in order: `images/matlab_logo.png` → MATLAB built-in icon.
