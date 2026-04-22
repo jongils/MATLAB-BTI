@@ -15,9 +15,6 @@
 - [주요 기능](#주요-기능)
 - [MBTI 유형 및 엔지니어링 역할](#mbti-유형-및-엔지니어링-역할)
 - [동작 원리](#동작-원리)
-- [시스템 요구사항](#시스템-요구사항)
-- [시작하기](#시작하기)
-- [프로젝트 구조](#프로젝트-구조)
 
 ---
 
@@ -76,52 +73,6 @@
    - **N/S** (직관 / 감각): 4, 8, 12번 질문
 6. **결과 화면**에서 MBTI 유형, 매핑된 엔지니어링 역할, 추천 툴박스, 궁합 정보를 확인합니다.
 7. 결과를 **PNG로 저장**하거나, **제품 페이지로 이동**하거나, **다시 시작**할 수 있습니다.
-
----
-
-### 시스템 요구사항
-
-- **MATLAB R2023a** 이상
-- MATLAB **App Designer** (MATLAB에 기본 포함)
-- *(선택사항)* 결과표에 나열된 MathWorks 툴박스 (제품 탐색용)
-
----
-
-### 시작하기
-
-```matlab
-% 1. MATLAB 실행
-% 2. 프로젝트 디렉토리로 이동
-cd /path/to/MBTI
-
-% 3. 앱 실행
-MBTIApp
-```
-
-또는 **MATLAB App Designer**에서 `MBTIApp.m` 파일을 열고 **실행(Run)** 버튼을 클릭합니다.
-
----
-
-### 프로젝트 구조
-
-```
-MBTI/
-├── MBTIApp.m              # MATLAB App Designer 메인 애플리케이션
-├── images/
-│   ├── mbti/              # MBTI 유형별 아이콘 (ENTP.png ~ ISFJ.png) — 여기에 추가
-│   ├── questions/         # 질문 삽화 이미지 (Q1.png ~ Q12.png)
-│   ├── qrcode.png         # 앱 접속 QR 코드
-│   └── matlab_logo.png    # (선택) MBTI 아이콘 없을 때 대체할 커스텀 로고
-├── .devcontainer/
-│   └── devcontainer.json  # 클라우드 개발용 Dev Container 설정
-├── .vscode/
-│   ├── launch.json        # VS Code 디버거 설정
-│   └── settings.json      # VS Code 워크스페이스 설정
-└── README.md              # 이 파일
-```
-
-> **참고:** MBTI 아이콘(`images/mbti/ENTP.png` 등) 및 질문 이미지(`images/questions/Q1.png`–`Q12.png`)는 저장소에 포함되어 있지 않습니다. MBTI 아이콘이 없으면 순서대로 대체됩니다: `images/matlab_logo.png` → MATLAB 설치 기본 아이콘.
-
 ---
 # MBTI Engineering Personality Quiz
 ---
