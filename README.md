@@ -80,7 +80,7 @@
 
 ---
 
-## 🇺🇸 English Version
+## US English Version
 
 ### Table of Contents
 - [Overview](#overview)
