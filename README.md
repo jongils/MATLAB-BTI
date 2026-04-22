@@ -73,8 +73,11 @@
    - **N/S** (직관 / 감각): 4, 8, 12번 질문
 6. **결과 화면**에서 MBTI 유형, 매핑된 엔지니어링 역할, 추천 툴박스, 궁합 정보를 확인합니다.
 7. 결과를 **PNG로 저장**하거나, **제품 페이지로 이동**하거나, **다시 시작**할 수 있습니다.
+
 ---
+
 # MBTI Engineering Personality Quiz
+
 ---
 
 ## 🇺🇸 English Version
@@ -84,9 +87,6 @@
 - [Features](#features)
 - [MBTI Types & Engineering Roles](#mbti-types--engineering-roles)
 - [How It Works](#how-it-works)
-- [Requirements](#requirements)
-- [Getting Started](#getting-started)
-- [Project Structure](#project-structure)
 
 ---
 
@@ -147,46 +147,3 @@ This is an interactive **MBTI personality quiz application** built with **MATLAB
 7. You can **save your result** as a PNG, **explore the product page**, or **retry** the quiz.
 
 ---
-
-### Requirements
-
-- **MATLAB R2023a** or later
-- MATLAB **App Designer** (included with MATLAB)
-- *(Optional)* MathWorks toolboxes listed in the results table for full product exploration
-
----
-
-### Getting Started
-
-```matlab
-% 1. Open MATLAB
-% 2. Navigate to the project directory
-cd /path/to/MBTI
-
-% 3. Run the app
-MBTIApp
-```
-
-Alternatively, open `MBTIApp.m` in **MATLAB App Designer** and click **Run**.
-
----
-
-### Project Structure
-
-```
-MBTI/
-├── MBTIApp.m              # Main MATLAB App Designer application
-├── images/
-│   ├── mbti/              # MBTI type icons (ENTP.png ~ ISFJ.png) — add icons here
-│   ├── questions/         # Question illustration images (Q1.png ~ Q12.png)
-│   ├── qrcode.png         # QR code for direct app access
-│   └── matlab_logo.png    # (Optional) Custom fallback logo when MBTI icon is missing
-├── .devcontainer/
-│   └── devcontainer.json  # Dev container configuration for cloud development
-├── .vscode/
-│   ├── launch.json        # VS Code debugger configuration
-│   └── settings.json      # VS Code workspace settings
-└── README.md              # This file
-```
-
-> **Note:** MBTI icon images (`images/mbti/ENTP.png`, etc.) and question images (`images/questions/Q1.png`–`Q12.png`) are not included in this repository. When an MBTI icon is missing, the app falls back in order: `images/matlab_logo.png` → MATLAB built-in icon.
