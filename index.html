@@ -39,7 +39,10 @@
 }
 
 html, body { min-height: 100vh; background: var(--bg); color: var(--txt); font-family: 'Noto Sans KR', sans-serif; transition: background 0.3s, color 0.3s; }
-#app { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 2rem 1rem; }
+#app { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 2rem 1rem; }
+.github-footer { margin-top: 1rem; font-size: 12px; color: var(--muted); text-align: center; }
+.github-footer a { color: var(--muted); text-decoration: none; }
+.github-footer a:hover { color: var(--accent); text-decoration: underline; }
 
 .card {
   width: 100%; max-width: 480px;
@@ -301,6 +304,9 @@ html, body { min-height: 100vh; background: var(--bg); color: var(--txt); font-f
         <button class="btn-result exit"  id="btn-exit-r" onclick="exitApp()"></button>
       </div>
     </div>
+  </div>
+  <div class="github-footer">
+    <a href="https://github.com/jongils" target="_blank">https://github.com/jongils</a>
   </div>
 </div>
 
