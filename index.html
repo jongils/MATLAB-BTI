@@ -92,6 +92,9 @@ html, body { min-height: 100vh; background: var(--bg); color: var(--txt); font-f
 .btn-ko { background: #007BFF; }
 .btn-en { background: #E83E8C; }
 .footer-note { text-align: center; font-size: 11px; color: var(--muted); }
+.intro-qr { text-align: center; margin-top: 1.4rem; padding-top: 1.2rem; border-top: 1px solid var(--border); }
+.intro-qr img { width: 120px; height: 120px; border-radius: 8px; }
+.intro-qr p { font-size: 11px; color: var(--muted); margin-top: 8px; line-height: 1.5; }
 
 /* progress */
 .progress-wrap { margin-bottom: 1.4rem; }
@@ -248,6 +251,10 @@ html, body { min-height: 100vh; background: var(--bg); color: var(--txt); font-f
       <div class="lang-grid">
         <button class="btn-lang btn-ko" onclick="startQuiz('ko')">한국어</button>
         <button class="btn-lang btn-en" onclick="startQuiz('en')">English</button>
+      </div>
+      <div class="intro-qr">
+        <img src="images/qrcode.png" alt="QR Code">
+        <p>QR 코드를 스캔하여 바로 접속하세요<br>Scan to open the app</p>
       </div>
     </div>
 
